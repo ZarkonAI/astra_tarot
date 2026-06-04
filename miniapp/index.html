@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astra Taro</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="star-avatar">✦</div>
+      <p class="eyebrow">Astra Taro</p>
+      <h1>Звезда уже ждёт ваш вопрос</h1>
+      <p class="subtitle">Выберите расклад, сформулируйте вопрос и позвольте картам мягко подсветить ситуацию.</p>
+    </section>
+
+    <section id="screen-menu" class="screen active">
+      <div class="cards-grid">
+        <button class="spread-card" data-spread="daily_card"><span>🌙</span><b>Карта дня</b><small>1 карта · бесплатно</small></button>
+        <button class="spread-card" data-spread="quick_reading"><span>✨</span><b>Быстрый расклад</b><small>3 карты · первый бесплатно</small></button>
+        <button class="spread-card" data-spread="heart_reading"><span>💜</span><b>Сердечный расклад</b><small>5 карт · любовь и отношения</small></button>
+        <button class="spread-card" data-spread="money_path"><span>💰</span><b>Денежный путь</b><small>5 карт · работа и деньги</small></button>
+        <button class="spread-card wide" data-spread="deep_reading"><span>🔮</span><b>Глубокий расклад</b><small>7 карт · личный вопрос</small></button>
+      </div>
+      <p class="notice">Расклады носят развлекательный и символический характер.</p>
+    </section>
+
+    <section id="screen-question" class="screen">
+      <button class="ghost-btn" id="back-to-menu">← Назад</button>
+      <h2 id="selected-title">Расклад</h2>
+      <p class="hint">Сформулируйте вопрос спокойно. Чем яснее вопрос, тем глубже получится ответ.</p>
+      <textarea id="question" placeholder="Например: что мне важно понять в этой ситуации?"></textarea>
+      <button class="primary-btn" id="draw-btn">Вытянуть карты</button>
+    </section>
+
+    <section id="screen-loading" class="screen">
+      <div class="ritual-card"><div class="big-star">✦</div><h2>Astra выбирает карты...</h2><p>Пару секунд. Звезда собирает символы в единый узор.</p></div>
+    </section>
+
+    <section id="screen-result" class="screen">
+      <button class="ghost-btn" id="new-reading">← Новый расклад</button>
+      <h2 id="result-title">Ваш расклад</h2>
+      <div id="drawn-cards" class="drawn-cards"></div>
+      <article id="answer" class="answer"></article>
+    </section>
+  </main>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="/js/telegram.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
