@@ -19,6 +19,8 @@ class Settings:
     bot_token: str
     admin_id: int | None
     database_path: str
+    public_base_url: str
+    miniapp_url: str
     webapp_url: str
     host: str
     port: int
@@ -44,12 +46,16 @@ def load_settings() -> Settings:
 
     admin_id_raw = os.getenv("ADMIN_ID", "").strip()
     admin_id = int(admin_id_raw) if admin_id_raw.isdigit() else None
+    public_base_url = os.getenv("PUBLIC_BASE_URL", os.getenv("WEBAPP_URL", "http://127.0.0.1:8000")).rstrip("/")
+    miniapp_url = os.getenv("MINIAPP_URL", f"{public_base_url}/miniapp/").strip()
 
     return Settings(
         bot_token=bot_token,
         admin_id=admin_id,
-        database_path=os.getenv("DATABASE_PATH", "database/astra_taro.db"),
-        webapp_url=os.getenv("WEBAPP_URL", "http://localhost:8000").rstrip("/"),
+        database_path=os.getenv("DATABASE_PATH", "database/astra_tarot.db"),
+        public_base_url=public_base_url,
+        miniapp_url=miniapp_url,
+        webapp_url=miniapp_url,
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8000")),
         ai_provider=os.getenv("AI_PROVIDER", "gemini").strip().lower(),
