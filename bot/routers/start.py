@@ -6,7 +6,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 
 from bot.config import Settings
-from bot.keyboards.user import main_menu
+from bot.keyboards import main_menu
 from database.db import Database
 from services.tarot.deck import draw_cards
 from services.tarot.prompt_builder import build_prompt
