@@ -11,7 +11,7 @@ export const spreads: SpreadConfig[] = [
     description: "Короткий символический совет на сегодня.",
     bestFor: "Когда хочется мягко понять настроение дня.",
     icon: "✦",
-    coverImage: "/assets/covers/cover_daily.webp",
+    coverImage: "assets/covers/cover_daily.webp",
   },
   {
     slug: "quick",
@@ -23,7 +23,7 @@ export const spreads: SpreadConfig[] = [
     description: "Короткий ответ, когда нужно понять общий вектор ситуации.",
     bestFor: "Для простого вопроса без лишних деталей.",
     icon: "☽",
-    coverImage: "/assets/covers/cover_quick.webp",
+    coverImage: "assets/covers/cover_quick.webp",
   },
   {
     slug: "love",
@@ -35,7 +35,7 @@ export const spreads: SpreadConfig[] = [
     description: "Бережный взгляд на чувства, контакт и личные границы.",
     bestFor: "Когда важно разобраться в отношениях без давления и ожиданий.",
     icon: "♡",
-    coverImage: "/assets/covers/cover_love.webp",
+    coverImage: "assets/covers/cover_love.webp",
   },
   {
     slug: "money",
@@ -47,7 +47,7 @@ export const spreads: SpreadConfig[] = [
     description: "Расклад о ресурсах, привычках и спокойных следующих шагах.",
     bestFor: "Когда хочется посмотреть на деньги как на тему выбора и опоры.",
     icon: "₽",
-    coverImage: "/assets/covers/cover_money.webp",
+    coverImage: "assets/covers/cover_money.webp",
   },
   {
     slug: "deep",
@@ -59,7 +59,7 @@ export const spreads: SpreadConfig[] = [
     description: "Несколько карт помогают увидеть слои ситуации и возможный фокус.",
     bestFor: "Для сложных тем, где нужен спокойный обзор без поспешных выводов.",
     icon: "✺",
-    coverImage: "/assets/covers/cover_deep.webp",
+    coverImage: "assets/covers/cover_deep.webp",
   },
 ];
 

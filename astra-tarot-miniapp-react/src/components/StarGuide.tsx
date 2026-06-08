@@ -1,28 +1,31 @@
-import { useState } from "react";
+import { AssetImage } from "./AssetImage";
 
 interface StarGuideProps {
   size?: "hero" | "compact";
+  variant?: "avatar" | "card" | "heroBanner" | "round";
 }
 
-export function StarGuide({ size = "compact" }: StarGuideProps) {
-  const [showImage, setShowImage] = useState(true);
-  const imageSrc = `${import.meta.env.BASE_URL}assets/guide/guide_main.webp`;
+const guideImages = {
+  avatar: "assets/guide/guide_avatar.webp",
+  card: "assets/guide/guide_card.webp",
+  heroBanner: "assets/guide/hero_guide_banner.webp",
+  round: "assets/logo/guide_round.webp",
+};
 
+export function StarGuide({ size = "compact", variant = "avatar" }: StarGuideProps) {
   return (
-    <div className={`star-guide star-guide--${size} guide-float`}>
-      {showImage && (
-        <img
-          className="star-guide__image"
-          src={imageSrc}
-          alt="Звезда-проводник"
-          onError={() => setShowImage(false)}
-        />
-      )}
-      {!showImage && (
-        <div className="star-guide__fallback" aria-label="Звезда-проводник">
-          <span />
-        </div>
-      )}
+    <div className={`star-guide star-guide--${size} star-guide--${variant} guide-float`}>
+      <AssetImage
+        className="star-guide__image"
+        path={guideImages[variant]}
+        fallbackPath="assets/logo/guide_round.webp"
+        alt="Звезда-проводник"
+        fallback={
+          <div className="star-guide__fallback" aria-label="Звезда-проводник">
+            <span />
+          </div>
+        }
+      />
     </div>
   );
 }

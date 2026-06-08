@@ -1,6 +1,6 @@
 # Astra Tarot Mini App
 
-React/Vite/TypeScript frontend for the Astra Tarot Telegram Mini App. It is built as a mobile-first in-app experience with welcome, home, spread selection, ritual loading, and result screens.
+React/Vite/TypeScript frontend for the Astra Tarot Telegram Mini App. The app is mobile-first and uses real visual assets from `public/assets` with GitHub Pages-safe paths.
 
 ## Run Locally
 
@@ -11,18 +11,68 @@ npm run dev
 
 Open the Vite URL in a browser. Outside Telegram the app shows a small `Browser preview` badge and works in mock mode.
 
-## Build
+## Build And Preview
 
 ```bash
 npm run typecheck
 npm run build
-```
-
-Preview the production build:
-
-```bash
 npm run preview
 ```
+
+## Assets
+
+Runtime images must live in:
+
+```text
+public/assets/
+  background/
+  cards/
+  covers/
+  guide/
+  logo/
+```
+
+The current source images were copied from the root `assets/` folder into `public/assets/`. React uses only `public/assets` so Vite can serve them locally, in preview, and on GitHub Pages.
+
+Important files:
+
+- `public/assets/guide/hero_guide_banner.webp`
+- `public/assets/guide/guide_avatar.webp`
+- `public/assets/guide/guide_card.webp`
+- `public/assets/logo/guide_round.webp`
+- `public/assets/background/card_back_minimal.webp`
+- `public/assets/background/card_back_ornate.webp`
+- `public/assets/covers/cover_daily.webp`
+- `public/assets/covers/cover_quick.webp`
+- `public/assets/covers/cover_love.webp`
+- `public/assets/covers/cover_money.webp`
+- `public/assets/covers/cover_deep.webp`
+- `public/assets/cards/card_*.webp`
+
+All image URLs in React should go through:
+
+```ts
+import { assetUrl } from "./src/services/assets";
+
+assetUrl("assets/guide/guide_avatar.webp");
+```
+
+Do not use hard-coded absolute paths like `/assets/...` in React components.
+
+## Missing Images
+
+If a card image is missing, the UI falls back to:
+
+- `assets/background/card_back_minimal.webp` for result and arcana cards;
+- `assets/background/card_back_ornate.webp` for ritual and spread cover fallback;
+- CSS fallback if even the fallback image is unavailable.
+
+If an image does not display:
+
+1. Check that it is under `public/assets`, not only under root `assets`.
+2. Check spelling and case in `src/data/arcana.ts` or `src/data/spreads.ts`.
+3. Check `VITE_BASE_PATH` for GitHub Pages deployments.
+4. Run `npm run build` to catch path or TypeScript regressions.
 
 ## Environment
 
@@ -73,17 +123,3 @@ Request body:
 ```
 
 The backend should validate Telegram `initData`, call Gemini server-side, and return a `ReadingResult` JSON object.
-
-## Assets
-
-Expected optional files:
-
-- `public/assets/guide/guide_main.webp`
-- `public/assets/cards/card_back.webp`
-- `public/assets/covers/cover_daily.webp`
-- `public/assets/covers/cover_quick.webp`
-- `public/assets/covers/cover_love.webp`
-- `public/assets/covers/cover_money.webp`
-- `public/assets/covers/cover_deep.webp`
-
-The interface has CSS fallbacks and does not break if these files are missing.

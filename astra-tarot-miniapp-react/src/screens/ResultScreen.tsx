@@ -1,3 +1,5 @@
+import { AssetImage } from "../components/AssetImage";
+import { StarGuide } from "../components/StarGuide";
 import type { ReadingResult } from "../types";
 
 interface ResultScreenProps {
@@ -10,16 +12,24 @@ export function ResultScreen({ result, onHome, onNewReading }: ResultScreenProps
   return (
     <section className="screen result-screen screen-enter">
       <header className="result-header">
-        <p className="eyebrow">Ваш расклад</p>
-        <h1>{result.spreadTitle}</h1>
-        {result.question && <p className="question-summary">«{result.question}»</p>}
+        <div>
+          <p className="eyebrow">Ваш расклад</p>
+          <h1>{result.spreadTitle}</h1>
+          {result.question && <p className="question-summary">«{result.question}»</p>}
+        </div>
+        <StarGuide size="compact" variant="round" />
       </header>
 
       <div className="reading-cards">
         {result.cards.map((card) => (
           <article className="reading-card" key={`${card.position}-${card.title}`}>
             <div className="reading-card__visual card-reveal-ready" aria-hidden="true">
-              <span />
+              <AssetImage
+                path={card.image}
+                fallbackPath="assets/background/card_back_minimal.webp"
+                alt=""
+                fallback={<span />}
+              />
             </div>
             <div className="reading-card__copy">
               <p>{card.position}</p>

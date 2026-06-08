@@ -10,7 +10,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
     <section className="screen welcome-screen screen-enter">
       <div className="welcome-screen__guide">
-        <StarGuide size="hero" />
+        <StarGuide size="hero" variant="heroBanner" />
       </div>
       <div className="welcome-screen__copy">
         <p className="eyebrow">Mini App</p>

@@ -164,24 +164,46 @@ span {
   display: grid;
   place-items: center;
   margin: 0 auto;
-  border-radius: 50%;
 }
 
 .star-guide--hero {
-  width: min(72vw, 330px);
-  aspect-ratio: 1;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1.58;
+  border: 1px solid rgba(241, 202, 114, 0.42);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.44), 0 0 56px rgba(241, 202, 114, 0.18);
 }
 
 .star-guide--compact {
-  width: 148px;
+  width: 86px;
   aspect-ratio: 1;
+  border: 1px solid rgba(241, 202, 114, 0.32);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 34px rgba(241, 202, 114, 0.14);
+}
+
+.star-guide--card {
+  width: 132px;
+  border-radius: var(--radius-lg);
 }
 
 .star-guide__image,
 .star-guide__fallback {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+}
+
+.star-guide--avatar .star-guide__image,
+.star-guide--round .star-guide__image {
+  object-fit: cover;
+}
+
+.star-guide--heroBanner .star-guide__image {
+  object-position: center;
 }
 
 .star-guide__fallback {
@@ -208,7 +230,22 @@ span {
 .welcome-screen {
   display: grid;
   align-content: center;
-  gap: 26px;
+  gap: 22px;
+}
+
+.welcome-screen__guide {
+  position: relative;
+}
+
+.welcome-screen__guide::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px -16px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(241, 202, 114, 0.22);
+  filter: blur(28px);
+  pointer-events: none;
 }
 
 .welcome-screen__copy {
@@ -220,6 +257,10 @@ span {
 }
 
 .home-header {
+  display: grid;
+  grid-template-columns: 1fr 86px;
+  gap: 14px;
+  align-items: center;
   padding-top: 14px;
 }
 
@@ -233,6 +274,8 @@ span {
 }
 
 .spread-card {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 52px 1fr;
   gap: 12px;
@@ -244,17 +287,25 @@ span {
   cursor: pointer;
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
+  background:
+    linear-gradient(90deg, rgba(7, 3, 13, 0.88), rgba(7, 3, 13, 0.58)),
+    var(--spread-cover),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
+  background-position: center;
+  background-size: cover;
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(18px);
 }
 
 .spread-card--featured {
-  min-height: 152px;
+  min-height: 172px;
   border-color: var(--color-border);
   background:
-    linear-gradient(135deg, rgba(241, 202, 114, 0.18), rgba(104, 224, 207, 0.09)),
+    linear-gradient(90deg, rgba(7, 3, 13, 0.86), rgba(7, 3, 13, 0.28)),
+    var(--spread-cover),
     rgba(255, 255, 255, 0.08);
+  background-position: center;
+  background-size: cover;
 }
 
 .spread-card.is-selected,
@@ -263,18 +314,31 @@ span {
   transform: translateY(1px);
 }
 
+.spread-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 36%);
+  pointer-events: none;
+}
+
 .spread-card__icon {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 52px;
   aspect-ratio: 1;
   border-radius: var(--radius-sm);
   color: var(--color-gold);
-  background: rgba(241, 202, 114, 0.1);
+  background: rgba(8, 3, 15, 0.56);
   font-size: 26px;
+  backdrop-filter: blur(8px);
 }
 
 .spread-card__content {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 5px;
 }
@@ -286,7 +350,7 @@ span {
 
 .spread-card__description,
 .spread-card__meta {
-  color: var(--color-muted);
+  color: #ddd4ed;
   font-size: 13px;
 }
 
@@ -305,23 +369,42 @@ span {
 }
 
 .arcana-mini-card {
+  position: relative;
+  overflow: hidden;
   display: grid;
   align-content: end;
-  min-height: 146px;
+  min-height: 166px;
   padding: 12px;
   border: 1px solid rgba(241, 202, 114, 0.2);
   border-radius: var(--radius-sm);
-  background:
-    linear-gradient(180deg, rgba(104, 224, 207, 0.12), transparent 42%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
+}
+
+.arcana-mini-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 18%, rgba(8, 3, 15, 0.84) 76%);
+}
+
+.arcana-mini-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .arcana-mini-card__number {
+  position: relative;
+  z-index: 1;
   color: var(--color-gold);
   font-size: 12px;
 }
 
 .arcana-mini-card__title {
+  position: relative;
+  z-index: 1;
   font-weight: 700;
   font-size: 14px;
 }
@@ -337,9 +420,11 @@ span {
 }
 
 .spread-hero__cover {
+  position: relative;
+  overflow: hidden;
   display: grid;
   place-items: center;
-  min-height: 176px;
+  min-height: 224px;
   margin: 12px 0 18px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -348,6 +433,23 @@ span {
     radial-gradient(circle at center, rgba(104, 224, 207, 0.18), transparent 62%),
     rgba(255, 255, 255, 0.06);
   box-shadow: var(--shadow-soft);
+}
+
+.spread-hero__cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 50%, rgba(8, 3, 15, 0.5)),
+    radial-gradient(circle at 50% 28%, transparent 0 42%, rgba(8, 3, 15, 0.2) 72%);
+  pointer-events: none;
+}
+
+.spread-hero__image {
+  width: 100%;
+  height: 100%;
+  min-height: 224px;
+  object-fit: cover;
 }
 
 .spread-hero__cover span {
@@ -450,6 +552,7 @@ span {
 
 .ritual-animation-placeholder span {
   display: block;
+  overflow: hidden;
   width: 56px;
   height: 86px;
   border: 1px solid var(--color-border);
@@ -457,6 +560,12 @@ span {
   background:
     radial-gradient(circle at center, rgba(241, 202, 114, 0.22), transparent 50%),
     linear-gradient(150deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.04));
+}
+
+.ritual-animation-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ritual-animation-placeholder span:nth-child(1) {
@@ -472,7 +581,15 @@ span {
 }
 
 .result-header {
+  display: grid;
+  grid-template-columns: 1fr 76px;
+  gap: 14px;
+  align-items: center;
   padding-top: 10px;
+}
+
+.result-header .star-guide--compact {
+  width: 76px;
 }
 
 .question-summary {
@@ -498,6 +615,7 @@ span {
 }
 
 .reading-card__visual {
+  overflow: hidden;
   display: grid;
   place-items: center;
   width: 78px;
@@ -507,6 +625,12 @@ span {
   background:
     linear-gradient(145deg, rgba(241, 202, 114, 0.2), rgba(104, 224, 207, 0.1)),
     rgba(255, 255, 255, 0.07);
+}
+
+.reading-card__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .reading-card__visual span {

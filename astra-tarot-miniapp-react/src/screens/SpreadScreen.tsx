@@ -1,3 +1,4 @@
+import { AssetImage } from "../components/AssetImage";
 import { BottomAction } from "../components/BottomAction";
 import { QuestionBox } from "../components/QuestionBox";
 import { SafetyNote } from "../components/SafetyNote";
@@ -28,7 +29,13 @@ export function SpreadScreen({ spread, question, error, isLoading, onQuestionCha
 
       <header className="spread-hero">
         <div className="spread-hero__cover">
-          <span>{spread.icon}</span>
+          <AssetImage
+            className="spread-hero__image"
+            path={spread.coverImage}
+            fallbackPath="assets/background/card_back_ornate.webp"
+            alt=""
+            fallback={<span>{spread.icon}</span>}
+          />
         </div>
         <p className="eyebrow">{spread.priceLabel}</p>
         <h1>{spread.title}</h1>

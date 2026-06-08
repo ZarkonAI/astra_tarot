@@ -4,10 +4,31 @@
 
 ```bash
 npm install
+npm run typecheck
 npm run build
 ```
 
 The static build appears in `dist/`.
+
+## Assets
+
+GitHub Pages serves images from the built `public/assets` folder. Keep runtime images here:
+
+```text
+public/assets/background/
+public/assets/cards/
+public/assets/covers/
+public/assets/guide/
+public/assets/logo/
+```
+
+React components should resolve image URLs through `src/services/assets.ts`:
+
+```ts
+assetUrl("assets/covers/cover_daily.webp");
+```
+
+This keeps paths working when the app is deployed under `/astra-tarot-miniapp/`.
 
 ## GitHub Pages With Actions
 
@@ -51,3 +72,7 @@ MINIAPP_URL=https://username.github.io/astra-tarot-miniapp/
 ```
 
 Do not add bot or Gemini secrets to the frontend `.env`.
+
+## If Images Do Not Display
+
+Check that the files exist under `public/assets`, that paths in `src/data/spreads.ts` and `src/data/arcana.ts` do not start with `/`, and that `VITE_BASE_PATH` matches the GitHub Pages repository path.

@@ -1,6 +1,7 @@
 import { ArcanaPreview } from "../components/ArcanaPreview";
 import { SafetyNote } from "../components/SafetyNote";
 import { SpreadCard } from "../components/SpreadCard";
+import { StarGuide } from "../components/StarGuide";
 import { spreads } from "../data/spreads";
 import type { SpreadConfig } from "../types";
 
@@ -16,9 +17,12 @@ export function HomeScreen({ firstName, onSelectSpread }: HomeScreenProps) {
   return (
     <section className="screen home-screen screen-enter">
       <header className="home-header">
-        <p className="eyebrow">Astra Tarot</p>
-        <h1>{firstName ? `Здравствуйте, ${firstName}` : "Добро пожаловать"}</h1>
-        <p>Сегодня можно начать с карты дня или выбрать расклад глубже.</p>
+        <div>
+          <p className="eyebrow">Astra Tarot</p>
+          <h1>{firstName ? `Здравствуйте, ${firstName}` : "Добро пожаловать"}</h1>
+          <p>Сегодня можно начать с карты дня или выбрать расклад глубже.</p>
+        </div>
+        <StarGuide size="compact" variant="avatar" />
       </header>
 
       {dailySpread && (

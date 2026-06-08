@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+import { assetUrl } from "../services/assets";
 import type { SpreadConfig } from "../types";
 
 interface SpreadCardProps {
@@ -8,10 +10,17 @@ interface SpreadCardProps {
 }
 
 export function SpreadCard({ spread, isSelected = false, isFeatured = false, onSelect }: SpreadCardProps) {
+  const coverStyle = spread.coverImage
+    ? ({
+        "--spread-cover": `url("${assetUrl(spread.coverImage)}")`,
+      } as CSSProperties & Record<"--spread-cover", string>)
+    : undefined;
+
   return (
     <button
       className={`spread-card ${isSelected ? "is-selected" : ""} ${isFeatured ? "spread-card--featured" : ""}`}
       type="button"
+      style={coverStyle}
       onClick={() => onSelect(spread)}
       aria-pressed={isSelected}
     >
