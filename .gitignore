@@ -1,1 +1,9 @@
 .env
+node_modules/
+dist/
+*.local
+*.tsbuildinfo
+astra-tarot-miniapp-react/node_modules/
+astra-tarot-miniapp-react/dist/
+astra-tarot-miniapp-react/.env
+astra-tarot-miniapp-react/.env.local

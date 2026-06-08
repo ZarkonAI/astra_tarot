@@ -1,0 +1,26 @@
+import type { ArcanaCard } from "../types";
+
+export const arcana: ArcanaCard[] = [
+  { number: 0, slug: "fool", title: "Шут", shortMeaning: "Новый путь, легкость, доверие первому шагу." },
+  { number: 1, slug: "magician", title: "Маг", shortMeaning: "Инициатива, намерение и умение собрать ресурсы." },
+  { number: 2, slug: "high-priestess", title: "Жрица", shortMeaning: "Интуиция, пауза и внимательность к внутреннему голосу." },
+  { number: 3, slug: "empress", title: "Императрица", shortMeaning: "Забота, рост, телесность и созидание." },
+  { number: 4, slug: "emperor", title: "Император", shortMeaning: "Границы, структура и спокойная устойчивость." },
+  { number: 5, slug: "hierophant", title: "Иерофант", shortMeaning: "Опыт, ценности и поддержка традиций." },
+  { number: 6, slug: "lovers", title: "Влюбленные", shortMeaning: "Выбор сердцем, близость и честный диалог." },
+  { number: 7, slug: "chariot", title: "Колесница", shortMeaning: "Движение, фокус и управление импульсом." },
+  { number: 8, slug: "strength", title: "Сила", shortMeaning: "Мягкая смелость, терпение и внутренняя опора." },
+  { number: 9, slug: "hermit", title: "Отшельник", shortMeaning: "Тишина, размышление и собственный темп." },
+  { number: 10, slug: "wheel", title: "Колесо Фортуны", shortMeaning: "Перемены, циклы и гибкость к новому повороту." },
+  { number: 11, slug: "justice", title: "Справедливость", shortMeaning: "Баланс, честность и ясные договоренности." },
+  { number: 12, slug: "hanged-man", title: "Повешенный", shortMeaning: "Пауза, другой взгляд и принятие временной неопределенности." },
+  { number: 13, slug: "death", title: "Смерть", shortMeaning: "Завершение этапа и освобождение места для нового." },
+  { number: 14, slug: "temperance", title: "Умеренность", shortMeaning: "Равновесие, восстановление и бережная настройка." },
+  { number: 15, slug: "devil", title: "Дьявол", shortMeaning: "Привязанности, соблазны и честность с собой." },
+  { number: 16, slug: "tower", title: "Башня", shortMeaning: "Смена опоры, прояснение и отказ от лишнего напряжения." },
+  { number: 17, slug: "star", title: "Звезда", shortMeaning: "Надежда, вдохновение и тихое доверие будущему." },
+  { number: 18, slug: "moon", title: "Луна", shortMeaning: "Чувствительность, сны и осторожность к догадкам." },
+  { number: 19, slug: "sun", title: "Солнце", shortMeaning: "Ясность, тепло и простая радость." },
+  { number: 20, slug: "judgement", title: "Суд", shortMeaning: "Пробуждение, выводы и новый честный выбор." },
+  { number: 21, slug: "world", title: "Мир", shortMeaning: "Целостность, завершение и чувство своего места." },
+];

@@ -1,0 +1,22 @@
+:root {
+  --color-bg: #08030f;
+  --color-bg-2: #11172c;
+  --color-surface: rgba(255, 255, 255, 0.075);
+  --color-surface-strong: rgba(255, 255, 255, 0.12);
+  --color-border: rgba(235, 199, 117, 0.34);
+  --color-border-soft: rgba(255, 255, 255, 0.12);
+  --color-text: #fbf6e8;
+  --color-muted: #bdb2d6;
+  --color-gold: #f1ca72;
+  --color-gold-dark: #9b6f2d;
+  --color-teal: #68e0cf;
+  --color-rose: #ee8faf;
+  --shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.38);
+  --shadow-gold: 0 0 28px rgba(241, 202, 114, 0.24);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --max-app-width: 560px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}

@@ -1,0 +1,74 @@
+@keyframes screen-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes guide-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes star-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes ritual-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(241, 202, 114, 0.22);
+  }
+  50% {
+    box-shadow: 0 0 44px rgba(104, 224, 207, 0.28);
+  }
+}
+
+.screen-enter {
+  animation: screen-enter 360ms ease both;
+}
+
+.guide-float {
+  animation: guide-float 4.8s ease-in-out infinite;
+}
+
+.star-pulse {
+  animation: star-pulse 2.8s ease-in-out infinite;
+}
+
+.ritual-glow {
+  animation: ritual-glow 2.4s ease-in-out infinite;
+}
+
+.card-reveal-ready,
+.animation-placeholder,
+.ritual-animation-placeholder {
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
