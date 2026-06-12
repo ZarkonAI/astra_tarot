@@ -1,0 +1,14 @@
+.env
+.env.local
+.env.*.local
+*.db
+*.sqlite
+*.sqlite3
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+node_modules/
+dist/

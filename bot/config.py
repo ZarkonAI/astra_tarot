@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from urllib.parse import urlparse
+
+from dotenv import load_dotenv
+
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT_DIR / ".env")
+
+
+@dataclass(frozen=True)
+class Settings:
+    bot_token: str
+    gemini_api_key: str
+    gemini_model: str
+    ai_provider: str
+    database_path: str
+    miniapp_url: str
+    public_base_url: str
+    host: str
+    port: int
+    start_backend: bool
+    admin_ids: set[int]
+    manual_payment_contact: str
+
+
+def _parse_bool(value: str | None, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _parse_admin_ids(value: str | None) -> set[int]:
+    if not value:
+        return set()
+
+    admin_ids: set[int] = set()
+    for raw_id in value.split(","):
+        raw_id = raw_id.strip()
+        if not raw_id:
+            continue
+        try:
+            admin_ids.add(int(raw_id))
+        except ValueError:
+            continue
+    return admin_ids
+
+
+def is_valid_telegram_webapp_url(url: str | None) -> bool:
+    if not url:
+        return False
+
+    normalized_url = url.strip()
+    if not normalized_url.startswith("https://"):
+        return False
+
+    parsed = urlparse(normalized_url)
+    host = (parsed.hostname or "").lower()
+    blocked_hosts = {
+        "",
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "your-domain",
+        "your-domain-or-hosting-url",
+    }
+    if host in blocked_hosts:
+        return False
+    if host.endswith(".localhost"):
+        return False
+
+    return True
+
+
+def load_settings() -> Settings:
+    database_path = os.getenv("DATABASE_PATH", "database/astra_tarot.db").strip()
+    resolved_database_path = Path(database_path)
+    if not resolved_database_path.is_absolute():
+        resolved_database_path = ROOT_DIR / resolved_database_path
+
+    return Settings(
+        bot_token=os.getenv("BOT_TOKEN", "").strip(),
+        gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
+        gemini_model=os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip(),
+        ai_provider=os.getenv("AI_PROVIDER", "gemini").strip().lower(),
+        database_path=str(resolved_database_path),
+        miniapp_url=os.getenv("MINIAPP_URL", "").strip(),
+        public_base_url=os.getenv("PUBLIC_BASE_URL", "").strip(),
+        host=os.getenv("HOST", "0.0.0.0").strip(),
+        port=int(os.getenv("PORT", "8000")),
+        start_backend=_parse_bool(os.getenv("START_BACKEND"), default=True),
+        admin_ids=_parse_admin_ids(os.getenv("ADMIN_IDS")),
+        manual_payment_contact=os.getenv("MANUAL_PAYMENT_CONTACT", "").strip(),
+    )
