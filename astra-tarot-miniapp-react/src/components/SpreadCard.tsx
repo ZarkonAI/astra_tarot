@@ -23,12 +23,18 @@ export function SpreadCard({ spread, isSelected = false, isFeatured = false, onS
       style={coverStyle}
       onClick={() => onSelect(spread)}
       aria-pressed={isSelected}
+      aria-label={`Выбрать расклад: ${spread.title}`}
     >
-      <span className="spread-card__icon" aria-hidden="true">{spread.icon}</span>
+      <span className="spread-card__icon" aria-hidden="true">
+        {spread.icon}
+      </span>
       <span className="spread-card__content">
         <span className="spread-card__title">{spread.title}</span>
         <span className="spread-card__description">{spread.description}</span>
-        <span className="spread-card__meta">{spread.cardsCount} карт · {spread.priceLabel}</span>
+        <span className="spread-card__best">{spread.bestFor}</span>
+        <span className="spread-card__meta">
+          {spread.cardsCount} карт · {spread.priceLabel}
+        </span>
       </span>
     </button>
   );

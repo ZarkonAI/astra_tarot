@@ -55,6 +55,14 @@ VITE_BASE_PATH=/astra-tarot-miniapp/
 
 If the repository name changes, update `VITE_BASE_PATH` and the workflow.
 
+Local and preview builds can keep the fallback base path:
+
+```env
+VITE_BASE_PATH=/
+```
+
+Do not reference images as `/assets/...` from React. Use `assetUrl("assets/...")` so Vite prefixes the current base path.
+
 ## BotFather
 
 Insert the deployed HTTPS URL into the Mini App/Web App settings:
@@ -76,3 +84,19 @@ Do not add bot or Gemini secrets to the frontend `.env`.
 ## If Images Do Not Display
 
 Check that the files exist under `public/assets`, that paths in `src/data/spreads.ts` and `src/data/arcana.ts` do not start with `/`, and that `VITE_BASE_PATH` matches the GitHub Pages repository path.
+
+Quick checks:
+
+```bash
+npm run typecheck
+npm run build
+npm run preview
+```
+
+Then open:
+
+```text
+http://127.0.0.1:4173/
+http://127.0.0.1:4173/assets/guide/hero_guide_banner.webp
+http://127.0.0.1:4173/assets/cards/card_star.webp
+```

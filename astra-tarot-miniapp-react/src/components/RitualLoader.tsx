@@ -6,13 +6,13 @@ export function RitualLoader() {
     <div className="ritual-loader">
       <StarGuide size="compact" variant="card" />
       <div className="ritual-animation-placeholder animation-placeholder ritual-glow card-reveal-ready guide-float" aria-hidden="true">
-        <span>
+        <span className="star-pulse">
           <AssetImage path="assets/background/card_back_ornate.webp" alt="" />
         </span>
-        <span>
+        <span className="star-pulse">
           <AssetImage path="assets/background/card_back_ornate.webp" alt="" />
         </span>
-        <span>
+        <span className="star-pulse">
           <AssetImage path="assets/background/card_back_ornate.webp" alt="" />
         </span>
       </div>

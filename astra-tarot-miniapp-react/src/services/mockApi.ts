@@ -12,7 +12,12 @@ const positionsBySpread: Record<SpreadSlug, string[]> = {
 };
 
 function pickCards(count: number): ReadingCard[] {
-  const shuffled = [...arcana].sort(() => Math.random() - 0.5);
+  const withImages = arcana.filter((card) => card.image);
+  const withoutImages = arcana.filter((card) => !card.image);
+  const shuffled = [
+    ...withImages.sort(() => Math.random() - 0.5),
+    ...withoutImages.sort(() => Math.random() - 0.5),
+  ];
 
   return shuffled.slice(0, count).map((card, index) => ({
     position: "",

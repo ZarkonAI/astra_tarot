@@ -59,6 +59,16 @@ assetUrl("assets/guide/guide_avatar.webp");
 
 Do not use hard-coded absolute paths like `/assets/...` in React components.
 
+## Screens
+
+The Mini App keeps a five-screen flow:
+
+- `WelcomeScreen` uses `hero_guide_banner.webp` and the Star Guide.
+- `HomeScreen` uses `guide_avatar.webp`, `cover_daily.webp`, and the four spread cover cards.
+- `SpreadScreen` shows the selected spread cover, details, question textarea, and sticky CTA.
+- `RitualScreen` uses `guide_card.webp` plus `card_back_ornate.webp` with light animation-ready classes.
+- `ResultScreen` renders the result inside the Mini App with card images, Star Guide advice, and safe fallback visuals.
+
 ## Missing Images
 
 If a card image is missing, the UI falls back to:
@@ -73,6 +83,8 @@ If an image does not display:
 2. Check spelling and case in `src/data/arcana.ts` or `src/data/spreads.ts`.
 3. Check `VITE_BASE_PATH` for GitHub Pages deployments.
 4. Run `npm run build` to catch path or TypeScript regressions.
+
+Mock readings prefer cards that already have real `public/assets/cards/*.webp` images. Arcana without images still remain valid data and fall back safely in UI.
 
 ## Environment
 

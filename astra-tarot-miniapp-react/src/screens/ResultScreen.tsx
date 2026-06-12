@@ -15,10 +15,25 @@ export function ResultScreen({ result, onHome, onNewReading }: ResultScreenProps
         <div>
           <p className="eyebrow">Ваш расклад</p>
           <h1>{result.spreadTitle}</h1>
-          {result.question && <p className="question-summary">«{result.question}»</p>}
+          {result.question ? (
+            <p className="question-summary">«{result.question}»</p>
+          ) : (
+            <p className="question-summary">Без отдельного вопроса. Карты смотрят на общий фон момента.</p>
+          )}
         </div>
         <StarGuide size="compact" variant="round" />
       </header>
+
+      <section className="result-oracle-card">
+        <StarGuide size="compact" variant="avatar" />
+        <div>
+          <p className="eyebrow">Звезда-проводник</p>
+          <p>
+            Ниже собраны выпавшие символы, короткая интерпретация и мягкий следующий шаг. Это не
+            предсказание, а пространство для спокойной саморефлексии.
+          </p>
+        </div>
+      </section>
 
       <div className="reading-cards">
         {result.cards.map((card) => (
@@ -28,7 +43,6 @@ export function ResultScreen({ result, onHome, onNewReading }: ResultScreenProps
                 path={card.image}
                 fallbackPath="assets/background/card_back_minimal.webp"
                 alt=""
-                fallback={<span />}
               />
             </div>
             <div className="reading-card__copy">

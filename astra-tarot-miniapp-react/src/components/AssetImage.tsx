@@ -17,14 +17,22 @@ export function AssetImage({ path, fallbackPath, fallback, alt, ...imageProps }:
   }, [path, fallbackPath]);
 
   if (!currentSource) {
-    return <>{fallback}</>;
+    return (
+      <>
+        {fallback ?? (
+          <span className="asset-image-fallback" aria-label={alt || "Image unavailable"}>
+            <span />
+          </span>
+        )}
+      </>
+    );
   }
 
   return (
     <img
       {...imageProps}
       src={assetUrl(currentSource)}
-      alt={alt}
+      alt={alt ?? ""}
       onError={() => {
         setSourceIndex((index) => {
           const nextIndex = index + 1;
