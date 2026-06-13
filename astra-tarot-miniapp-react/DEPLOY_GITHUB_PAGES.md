@@ -28,21 +28,22 @@ React components should resolve image URLs through `src/services/assets.ts`:
 assetUrl("assets/covers/cover_daily.webp");
 ```
 
-This keeps paths working when the app is deployed under `/astra-tarot-miniapp/`.
+This keeps paths working when the app is deployed under `/astra_tarot/`.
 
 ## GitHub Pages With Actions
 
-1. Create or use the repository `astra-tarot-miniapp`.
+1. Create or use the repository `astra_tarot`.
 2. Push this project to GitHub.
 3. In GitHub, open `Settings -> Pages`.
 4. Set `Build and deployment` to `GitHub Actions`.
-5. Keep `.github/workflows/deploy.yml` in the repo.
+5. Keep `.github/workflows/deploy.yml` in the repository root, not only inside
+   `astra-tarot-miniapp-react`.
 6. Push to `main` or run the workflow manually.
 
 The expected URL is:
 
 ```text
-https://username.github.io/astra-tarot-miniapp/
+https://zarkonai.github.io/astra_tarot/
 ```
 
 ## Base Path
@@ -50,7 +51,10 @@ https://username.github.io/astra-tarot-miniapp/
 For GitHub Pages the build uses:
 
 ```env
-VITE_BASE_PATH=/astra-tarot-miniapp/
+VITE_APP_MODE=mock
+VITE_API_BASE_URL=
+VITE_BASE_PATH=/astra_tarot/
+VITE_GITHUB_PAGES_BASE=/astra_tarot/
 ```
 
 If the repository name changes, update `VITE_BASE_PATH` and the workflow.
@@ -68,15 +72,18 @@ Do not reference images as `/assets/...` from React. Use `assetUrl("assets/...")
 Insert the deployed HTTPS URL into the Mini App/Web App settings:
 
 ```text
-https://username.github.io/astra-tarot-miniapp/
+https://zarkonai.github.io/astra_tarot/
 ```
+
+Use it for both Main App URL and Menu Button URL.
 
 ## Bot Environment
 
 In the Python bot `.env`, use:
 
 ```env
-MINIAPP_URL=https://username.github.io/astra-tarot-miniapp/
+MINIAPP_URL=https://zarkonai.github.io/astra_tarot/
+PUBLIC_BASE_URL=https://zarkonai.github.io/astra_tarot/
 ```
 
 Do not add bot or Gemini secrets to the frontend `.env`.
@@ -97,6 +104,7 @@ Then open:
 
 ```text
 http://127.0.0.1:4173/
-http://127.0.0.1:4173/assets/guide/hero_guide_banner.webp
-http://127.0.0.1:4173/assets/cards/card_star.webp
+http://127.0.0.1:4173/astra_tarot/
+http://127.0.0.1:4173/astra_tarot/assets/guide/hero_guide_banner.webp
+http://127.0.0.1:4173/astra_tarot/assets/cards/card_star.webp
 ```

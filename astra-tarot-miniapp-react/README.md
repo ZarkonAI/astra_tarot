@@ -93,16 +93,21 @@ Create `.env.local` only for public frontend settings:
 ```env
 VITE_APP_MODE=mock
 VITE_API_BASE_URL=
-VITE_BASE_PATH=/
+VITE_BASE_PATH=/astra_tarot/
+VITE_GITHUB_PAGES_BASE=/astra_tarot/
 ```
 
 For GitHub Pages, set:
 
 ```env
-VITE_BASE_PATH=/astra-tarot-miniapp/
+VITE_APP_MODE=mock
+VITE_API_BASE_URL=
+VITE_BASE_PATH=/astra_tarot/
+VITE_GITHUB_PAGES_BASE=/astra_tarot/
 ```
 
-Do not put `BOT_TOKEN`, `GEMINI_API_KEY`, or any private backend secrets in this frontend project.
+Do not put private backend secrets or backend-only runtime settings in this
+frontend project.
 
 ## Telegram
 
@@ -111,7 +116,15 @@ The Telegram wrapper lives in `src/services/telegram.ts`. It safely reads `windo
 When the bot is ready, set the Mini App URL in BotFather to the deployed HTTPS URL, for example:
 
 ```text
-https://username.github.io/astra-tarot-miniapp/
+https://zarkonai.github.io/astra_tarot/
+```
+
+Use this same URL for BotFather Main App URL and Menu Button URL. In the Python
+bot `.env`, set:
+
+```env
+MINIAPP_URL=https://zarkonai.github.io/astra_tarot/
+PUBLIC_BASE_URL=https://zarkonai.github.io/astra_tarot/
 ```
 
 ## API Mode

@@ -23,8 +23,8 @@ npm run build
 The public GitHub Pages URL should be placed in the bot root `.env`:
 
 ```text
-MINIAPP_URL=https://zarkonai.github.io/astra-tarot-miniapp/
-PUBLIC_BASE_URL=https://zarkonai.github.io/astra-tarot-miniapp/
+MINIAPP_URL=https://zarkonai.github.io/astra_tarot/
+PUBLIC_BASE_URL=https://zarkonai.github.io/astra_tarot/
 ```
 
 Do not put `BOT_TOKEN` or `GEMINI_API_KEY` into frontend env files.

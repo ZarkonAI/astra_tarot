@@ -23,19 +23,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: astra-tarot-miniapp-react/package-lock.json
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Build
         run: npm run build
         env:
           VITE_APP_MODE: mock
-          VITE_BASE_PATH: /astra-tarot-miniapp/
+          VITE_API_BASE_URL: ""
+          VITE_BASE_PATH: /astra_tarot/
+          VITE_GITHUB_PAGES_BASE: /astra_tarot/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

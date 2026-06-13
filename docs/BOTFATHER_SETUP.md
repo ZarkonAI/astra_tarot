@@ -6,7 +6,7 @@ or `http://127.0.0.1:5173` are not valid Telegram Web App URLs.
 GitHub Pages URL:
 
 ```text
-https://zarkonai.github.io/astra-tarot-miniapp/
+https://zarkonai.github.io/astra_tarot/
 ```
 
 BotFather path:
@@ -20,5 +20,5 @@ BotFather path:
 -> Edit Web App URL
 ```
 
-Use the GitHub Pages URL above as the Web App URL. Put the same URL into the
-bot `.env` as `MINIAPP_URL`.
+Use the GitHub Pages URL above as the Main App URL and Menu Button URL. Put the
+same URL into the bot `.env` as `MINIAPP_URL` and `PUBLIC_BASE_URL`.
