@@ -37,7 +37,8 @@ def create_app(settings: Settings, db: Database, ai_service: AIService) -> FastA
 
         drawn_cards = create_draw(spread)
         interpretation = await ai_service.generate_reading(spread, payload.question, drawn_cards)
-        cards = [drawn.to_public_dict() for drawn in drawn_cards]
+        public_base_url = settings.public_base_url or settings.miniapp_url
+        cards = [drawn.to_public_dict(public_base_url) for drawn in drawn_cards]
 
         await db.create_reading(
             telegram_id=None,
@@ -58,6 +59,7 @@ def create_app(settings: Settings, db: Database, ai_service: AIService) -> FastA
                     "position": card["position"],
                     "title": card["title"],
                     "meaning": card["meaning"],
+                    "image": card["image"],
                 }
                 for card in cards
             ],

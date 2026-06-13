@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import socket
 from contextlib import suppress
 
 import uvicorn
@@ -23,7 +24,21 @@ logger = logging.getLogger(__name__)
 async def _serve_backend(app, host: str, port: int) -> None:
     config = uvicorn.Config(app, host=host, port=port, log_level="info")
     server = uvicorn.Server(config)
-    await server.serve()
+    try:
+        await server.serve()
+    except OSError as exc:
+        logger.warning("FastAPI backend failed to start on %s:%s: %s", host, port, exc)
+
+
+def _is_port_available(host: str, port: int) -> bool:
+    bind_host = host if host not in {"0.0.0.0", ""} else ""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((bind_host, port))
+        except OSError:
+            return False
+    return True
 
 
 async def main() -> None:
@@ -43,9 +58,16 @@ async def main() -> None:
     backend_task: asyncio.Task | None = None
     try:
         if settings.start_backend:
-            app = create_app(settings, db, ai_service)
-            backend_task = asyncio.create_task(_serve_backend(app, settings.host, settings.port))
-            logger.info("FastAPI backend is starting on %s:%s", settings.host, settings.port)
+            if _is_port_available(settings.host, settings.port):
+                app = create_app(settings, db, ai_service)
+                backend_task = asyncio.create_task(_serve_backend(app, settings.host, settings.port))
+                logger.info("FastAPI backend is starting on %s:%s", settings.host, settings.port)
+            else:
+                logger.warning(
+                    "FastAPI backend port %s:%s is already in use; bot polling will continue.",
+                    settings.host,
+                    settings.port,
+                )
 
         await dispatcher.start_polling(
             bot,

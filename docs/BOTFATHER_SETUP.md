@@ -22,3 +22,10 @@ BotFather path:
 
 Use the GitHub Pages URL above as the Main App URL and Menu Button URL. Put the
 same URL into the bot `.env` as `MINIAPP_URL` and `PUBLIC_BASE_URL`.
+
+Bot `.env`:
+
+```env
+MINIAPP_URL=https://zarkonai.github.io/astra_tarot/
+PUBLIC_BASE_URL=https://zarkonai.github.io/astra_tarot/
+```
