@@ -1,5 +1,4 @@
 import { ArcanaPreview } from "../components/ArcanaPreview";
-import { SafetyNote } from "../components/SafetyNote";
 import { SpreadCard } from "../components/SpreadCard";
 import { StarGuide } from "../components/StarGuide";
 import { spreads } from "../data/spreads";
@@ -44,7 +43,6 @@ export function HomeScreen({ firstName, onSelectSpread }: HomeScreenProps) {
       </section>
 
       <ArcanaPreview />
-      <SafetyNote />
     </section>
   );
 }

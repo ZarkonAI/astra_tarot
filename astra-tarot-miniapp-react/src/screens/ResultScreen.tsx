@@ -28,10 +28,7 @@ export function ResultScreen({ result, onHome, onNewReading }: ResultScreenProps
         <StarGuide size="compact" variant="avatar" />
         <div>
           <p className="eyebrow">Звезда-проводник</p>
-          <p>
-            Ниже собраны выпавшие символы, короткая интерпретация и мягкий следующий шаг. Это не
-            предсказание, а пространство для спокойной саморефлексии.
-          </p>
+          <p>Ниже собраны выпавшие символы, интерпретация и один спокойный следующий шаг.</p>
         </div>
       </section>
 
@@ -64,7 +61,7 @@ export function ResultScreen({ result, onHome, onNewReading }: ResultScreenProps
         <p>{result.guideAdvice}</p>
       </article>
 
-      <p className="safety-note">{result.disclaimer}</p>
+      {result.disclaimer && <p className="safety-note">{result.disclaimer}</p>}
 
       <div className="result-actions">
         <button className="button button--primary" type="button" onClick={onNewReading}>

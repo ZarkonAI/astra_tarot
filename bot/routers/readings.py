@@ -72,16 +72,17 @@ async def _send_reading(
         await message.answer(UNKNOWN_SPREAD_TEXT)
         return
 
+    is_admin = settings.is_admin(telegram_user.id)
     await db.upsert_user_from_telegram(telegram_user)
     user = await db.get_user(telegram_user.id)
 
     is_free = True
     if spread.is_daily:
-        if await db.has_daily_usage(telegram_user.id):
+        if not is_admin and await db.has_daily_usage(telegram_user.id):
             await message.answer(DAILY_ALREADY_USED_TEXT)
             return
     elif spread.slug in FULL_SPREAD_SLUGS:
-        if user and int(user.get("has_used_free_full_spread", 0)) == 1:
+        if not is_admin and user and int(user.get("has_used_free_full_spread", 0)) == 1:
             await message.answer(FREE_FULL_SPREAD_USED_TEXT)
             return
 
@@ -93,9 +94,9 @@ async def _send_reading(
     public_base_url = _public_base_url(settings)
     cards_payload = [drawn.to_public_dict(public_base_url) for drawn in drawn_cards]
 
-    if spread.is_daily:
+    if spread.is_daily and not is_admin:
         await db.mark_daily_usage(telegram_user.id)
-    elif spread.slug in FULL_SPREAD_SLUGS:
+    elif spread.slug in FULL_SPREAD_SLUGS and not is_admin:
         await db.mark_free_full_spread_used(telegram_user.id)
 
     await db.create_reading(

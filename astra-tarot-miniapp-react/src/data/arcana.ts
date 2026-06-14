@@ -1,11 +1,11 @@
 import type { ArcanaCard } from "../types";
 
 export const arcana: ArcanaCard[] = [
-  { number: 0, slug: "fool", title: "Шут", shortMeaning: "Новый путь, легкость, доверие первому шагу." },
-  { number: 1, slug: "magician", title: "Маг", shortMeaning: "Инициатива, намерение и умение собрать ресурсы." },
-  { number: 2, slug: "high-priestess", title: "Жрица", shortMeaning: "Интуиция, пауза и внимательность к внутреннему голосу." },
-  { number: 3, slug: "empress", title: "Императрица", shortMeaning: "Забота, рост, телесность и созидание." },
-  { number: 4, slug: "emperor", title: "Император", shortMeaning: "Границы, структура и спокойная устойчивость." },
+  { number: 0, slug: "fool", title: "Шут", shortMeaning: "Новый путь, легкость, доверие первому шагу.", image: "assets/cards/card_fool.webp" },
+  { number: 1, slug: "magician", title: "Маг", shortMeaning: "Инициатива, намерение и умение собрать ресурсы.", image: "assets/cards/card_magician.webp" },
+  { number: 2, slug: "high-priestess", title: "Жрица", shortMeaning: "Интуиция, пауза и внимательность к внутреннему голосу.", image: "assets/cards/card_priestess.webp" },
+  { number: 3, slug: "empress", title: "Императрица", shortMeaning: "Забота, рост, телесность и созидание.", image: "assets/cards/card_empress.webp" },
+  { number: 4, slug: "emperor", title: "Император", shortMeaning: "Границы, структура и спокойная устойчивость.", image: "assets/cards/card_emperor.webp" },
   { number: 5, slug: "hierophant", title: "Иерофант", shortMeaning: "Опыт, ценности и поддержка традиций.", image: "assets/cards/card_hierophant.webp" },
   { number: 6, slug: "lovers", title: "Влюбленные", shortMeaning: "Выбор сердцем, близость и честный диалог.", image: "assets/cards/card_lovers.webp" },
   { number: 7, slug: "chariot", title: "Колесница", shortMeaning: "Движение, фокус и управление импульсом.", image: "assets/cards/card_chariot.webp" },

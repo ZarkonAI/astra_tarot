@@ -8,7 +8,7 @@ def build_reading_prompt(spread: Spread, question: str, drawn_cards: list[DrawnC
     cards_text = "\n".join(card.to_prompt_text() for card in drawn_cards)
     question_text = question.strip() or "Пользователь не указал отдельный вопрос."
     money_notice = (
-        "\nДля денежного расклада обязательно напомните, что это не финансовая рекомендация."
+        "\nДля денежного расклада пишите спокойно и практично, без обещаний результата."
         if spread.slug == "money"
         else ""
     )
@@ -22,7 +22,8 @@ def build_reading_prompt(spread: Spread, question: str, drawn_cards: list[DrawnC
 Вы - бережный русскоязычный проводник сервиса Astra Tarot.
 Обращайтесь к пользователю на "вы". Тон мягкий, мистический, спокойный.
 Не используйте фатализм, запугивание, манипуляции и обещания точных событий.
-Не давайте медицинских, юридических или финансовых рекомендаций.{money_notice}{love_notice}
+Пишите живо, не повторяйте шаблонные фразы и одинаковые абзацы.
+Учитывайте конкретную карту, позицию и вопрос пользователя.{money_notice}{love_notice}
 
 Расклад: {spread.title}
 Вопрос: {question_text}
@@ -33,5 +34,4 @@ def build_reading_prompt(spread: Spread, question: str, drawn_cards: list[DrawnC
 1. Общая энергия расклада
 2. Карты
 3. Совет звезды-проводника
-4. Важное напоминание
 """.strip()

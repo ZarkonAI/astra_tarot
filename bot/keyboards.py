@@ -29,3 +29,14 @@ def main_menu(webapp_url: str | None) -> InlineKeyboardMarkup:
 
     rows.extend([[InlineKeyboardButton(text=text, callback_data=callback)] for text, callback in SPREAD_BUTTONS])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def admin_menu() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="♻️ Сбросить мои лимиты", callback_data="admin:reset_me")],
+            [InlineKeyboardButton(text="📊 Статистика", callback_data="admin:stats")],
+            [InlineKeyboardButton(text="🃏 Тест карты дня", callback_data="admin:test_daily")],
+            [InlineKeyboardButton(text="🌙 Тест глубокого расклада", callback_data="admin:test_deep")],
+        ]
+    )

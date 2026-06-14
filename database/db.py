@@ -119,6 +119,17 @@ class Database:
         )
         await self.connection.commit()
 
+    async def reset_user_limits(self, telegram_id: int) -> None:
+        await self.connection.execute(
+            "DELETE FROM daily_usage WHERE telegram_id = ?",
+            (telegram_id,),
+        )
+        await self.connection.execute(
+            "UPDATE users SET has_used_free_full_spread = 0, updated_at = CURRENT_TIMESTAMP WHERE telegram_id = ?",
+            (telegram_id,),
+        )
+        await self.connection.commit()
+
     async def create_reading(
         self,
         telegram_id: int | None,

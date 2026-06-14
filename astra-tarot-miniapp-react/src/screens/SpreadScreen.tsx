@@ -1,7 +1,6 @@
 import { AssetImage } from "../components/AssetImage";
 import { BottomAction } from "../components/BottomAction";
 import { QuestionBox } from "../components/QuestionBox";
-import { SafetyNote } from "../components/SafetyNote";
 import type { SpreadConfig } from "../types";
 
 interface SpreadScreenProps {
@@ -12,12 +11,6 @@ interface SpreadScreenProps {
   onQuestionChange: (value: string) => void;
   onBack: () => void;
   onSubmit: () => void;
-}
-
-function getSafetyVariant(spread: SpreadConfig): "default" | "love" | "money" {
-  if (spread.slug === "love") return "love";
-  if (spread.slug === "money") return "money";
-  return "default";
 }
 
 export function SpreadScreen({ spread, question, error, isLoading, onQuestionChange, onBack, onSubmit }: SpreadScreenProps) {
@@ -60,8 +53,6 @@ export function SpreadScreen({ spread, question, error, isLoading, onQuestionCha
           {error}
         </div>
       )}
-
-      <SafetyNote variant={getSafetyVariant(spread)} />
 
       <BottomAction
         primaryLabel={isLoading ? "Выбираю карты..." : "Получить расклад"}

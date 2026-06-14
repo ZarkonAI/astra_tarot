@@ -10,7 +10,8 @@ VENV_SITE_PACKAGES = ROOT_DIR / ".venv" / "Lib" / "site-packages"
 if VENV_SITE_PACKAGES.exists():
     sys.path.insert(0, str(VENV_SITE_PACKAGES))
 
-from bot.keyboards import main_menu
+from bot.config import Settings
+from bot.keyboards import admin_menu, main_menu
 from services.readings.engine import create_draw
 from services.tarot.cards import CARD_BACK_ORNATE, MAJOR_ARCANA, REQUIRED_CARD_FIELDS, build_public_asset_url
 from services.tarot.spreads import SPREADS
@@ -46,10 +47,11 @@ def test_cards() -> None:
         assert card.image_path
         assert card.image_path.startswith("assets/")
 
-    fallback_slugs = {"fool", "magician", "high_priestess", "empress", "emperor"}
     for card in MAJOR_ARCANA:
-        if card.slug in fallback_slugs:
-            assert card.image_path == CARD_BACK_ORNATE
+        assert card.image_path != CARD_BACK_ORNATE
+        assert card.image_path.startswith("assets/cards/")
+        public_file = ROOT_DIR / "astra-tarot-miniapp-react" / "public" / card.image_path
+        assert public_file.exists(), f"Missing public asset: {public_file}"
 
     assert (
         build_public_asset_url("https://zarkonai.github.io/astra_tarot/", "assets/cards/card_judgement.webp")
@@ -64,10 +66,31 @@ def test_main_menu_webapp_url() -> None:
     assert _keyboard_has_web_app(main_menu("https://zarkonai.github.io/astra_tarot/"))
 
 
+def test_admin_helpers() -> None:
+    settings = Settings(
+        bot_token="",
+        gemini_api_key="",
+        gemini_model="gemini-1.5-flash",
+        ai_provider="gemini",
+        database_path="database/astra_tarot.db",
+        miniapp_url="https://zarkonai.github.io/astra_tarot/",
+        public_base_url="https://zarkonai.github.io/astra_tarot/",
+        host="0.0.0.0",
+        port=8000,
+        start_backend=True,
+        admin_ids={123456789},
+        manual_payment_contact="",
+    )
+    assert settings.is_admin(123456789)
+    assert not settings.is_admin(987654321)
+    assert admin_menu().inline_keyboard
+
+
 def main() -> None:
     test_spreads()
     test_cards()
     test_main_menu_webapp_url()
+    test_admin_helpers()
     print("Smoke test passed.")
 
 

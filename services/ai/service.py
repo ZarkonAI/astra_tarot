@@ -4,7 +4,6 @@ import asyncio
 import logging
 
 from bot.config import Settings
-from bot.texts import READING_DISCLAIMER
 from services.ai.prompts import build_reading_prompt
 from services.readings.engine import DrawnCard
 from services.tarot.spreads import Spread
@@ -40,12 +39,22 @@ class AIService:
         prompt = build_reading_prompt(spread, question, drawn_cards)
 
         def _call_gemini() -> str:
-            import google.generativeai as genai
+            try:
+                from google import genai
 
-            genai.configure(api_key=self._settings.gemini_api_key)
-            model = genai.GenerativeModel(self._settings.gemini_model)
-            response = model.generate_content(prompt)
-            text = getattr(response, "text", "") or ""
+                client = genai.Client(api_key=self._settings.gemini_api_key)
+                response = client.models.generate_content(
+                    model=self._settings.gemini_model,
+                    contents=prompt,
+                )
+                text = getattr(response, "text", "") or ""
+            except ImportError:
+                import google.generativeai as legacy_genai
+
+                legacy_genai.configure(api_key=self._settings.gemini_api_key)
+                model = legacy_genai.GenerativeModel(self._settings.gemini_model)
+                response = model.generate_content(prompt)
+                text = getattr(response, "text", "") or ""
             if not text.strip():
                 raise RuntimeError("Gemini returned an empty response")
             return text.strip()
@@ -58,25 +67,38 @@ class AIService:
         question: str,
         drawn_cards: list[DrawnCard],
     ) -> str:
-        cards_lines = "\n".join(
-            f"- {card.position}: {card.card.title}. {card.card.light}. Теневая подсказка: {card.card.shadow}."
-            for card in drawn_cards
-        )
-        question_line = question.strip() or "Сейчас важнее прислушаться к общему настроению расклада."
-
-        extra_notice = ""
-        if spread.slug == "money":
-            extra_notice = "\n\nЭто не финансовая рекомендация; используйте расклад как повод для спокойной рефлексии."
-        elif spread.slug == "love":
-            extra_notice = "\n\nВ отношениях выбирайте бережность, доверие к себе и уважение границ другого человека."
+        question_line = question.strip()
+        cards_lines = "\n".join(self._card_line(card) for card in drawn_cards)
+        intro_by_spread = {
+            "daily_card": "Сегодняшняя карта подсвечивает тон дня без лишнего шума.",
+            "quick": "Быстрый расклад собирает главный смысл в один ясный акцент.",
+            "love": "Сердечный расклад говорит мягко: здесь важны тон, чувство и честность с собой.",
+            "money": "Денежный путь смотрит на ресурс, возможность и практичный следующий шаг.",
+            "deep": "Глубокий расклад разворачивает ситуацию слоями: видимое, скрытое и то, что помогает двигаться дальше.",
+        }
+        advice_by_spread = {
+            "daily_card": "Возьмите из карты одно слово и проверьте, где оно отзывается в течение дня.",
+            "quick": "Сфокусируйтесь на ближайшем действии, которое можно сделать без драматизации.",
+            "love": "Выберите бережную формулировку для себя или другого человека и не спешите с выводом.",
+            "money": "Отделите реальный ресурс от тревожного ожидания и наметьте один спокойный шаг.",
+            "deep": "Запишите, что поддерживает вас сейчас, и что стоит мягко отпустить.",
+        }
+        question_part = f"\nВопрос: {question_line}\n" if question_line else ""
 
         return (
             "1. Общая энергия расклада\n"
-            f"{spread.title} показывает тему: {question_line}\n\n"
+            f"{intro_by_spread.get(spread.slug, 'Карты собирают несколько важных символов в один образ.')}"
+            f"{question_part}\n\n"
             "2. Карты\n"
             f"{cards_lines}\n\n"
             "3. Совет звезды-проводника\n"
-            "Сделайте один небольшой шаг, который возвращает ясность и внутреннюю опору.\n\n"
-            "4. Важное напоминание\n"
-            f"{READING_DISCLAIMER}{extra_notice}"
+            f"{advice_by_spread.get(spread.slug, 'Выберите один честный и спокойный следующий шаг.')}"
+        )
+
+    @staticmethod
+    def _card_line(drawn_card: DrawnCard) -> str:
+        return (
+            f"- {drawn_card.position}: {drawn_card.card.title}. "
+            f"Свет карты: {drawn_card.card.light}. "
+            f"Тень, которую стоит заметить: {drawn_card.card.shadow}."
         )

@@ -47,10 +47,14 @@ export function App() {
     setSelectedSpread(spread);
     setQuestion("");
     setError(undefined);
+    if (spread.slug === "daily_card") {
+      submitReadingForSpread(spread, "");
+      return;
+    }
     setScreen("spread");
   }
 
-  function submitReading() {
+  function submitReadingForSpread(spread: SpreadConfig, readingQuestion: string) {
     if (isLoading) {
       return;
     }
@@ -64,8 +68,8 @@ export function App() {
     activeRequestRef.current = requestId;
 
     createReading({
-      spread: selectedSpread.slug,
-      question,
+      spread: spread.slug,
+      question: readingQuestion,
       initData: getTelegramInitData(),
     })
       .then((reading) => {
@@ -78,13 +82,17 @@ export function App() {
         if (activeRequestRef.current !== requestId) return;
         hapticFeedback("error");
         setError("Звезда-проводник не смогла получить ответ. Попробуйте ещё раз.");
-        setScreen("spread");
+        setScreen(spread.slug === "daily_card" ? "home" : "spread");
       })
       .finally(() => {
         if (activeRequestRef.current === requestId) {
           setIsLoading(false);
         }
       });
+  }
+
+  function submitReading() {
+    submitReadingForSpread(selectedSpread, question);
   }
 
   function goHome() {

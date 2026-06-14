@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from bot.config import Settings
-from bot.keyboards import main_menu
+from bot.keyboards import admin_menu, main_menu
 from bot.texts import HELP_TEXT, WELCOME_TEXT
 from database.db import Database
 
@@ -22,6 +22,8 @@ async def start_command(message: Message, settings: Settings, db: Database) -> N
         WELCOME_TEXT,
         reply_markup=main_menu(settings.miniapp_url),
     )
+    if settings.is_admin(message.from_user.id if message.from_user else None):
+        await message.answer("Админ-режим активен.", reply_markup=admin_menu())
 
 
 @router.message(Command("help"))
