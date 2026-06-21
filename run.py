@@ -6,6 +6,7 @@ import socket
 from contextlib import suppress
 
 import uvicorn
+from aiohttp import ClientConnectionError, ServerDisconnectedError
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -69,12 +70,21 @@ async def main() -> None:
                     settings.port,
                 )
 
-        await dispatcher.start_polling(
-            bot,
-            settings=settings,
-            db=db,
-            ai_service=ai_service,
-        )
+        while True:
+            try:
+                await dispatcher.start_polling(
+                    bot,
+                    settings=settings,
+                    db=db,
+                    ai_service=ai_service,
+                )
+                break
+            except (ClientConnectionError, ServerDisconnectedError, OSError, asyncio.TimeoutError) as exc:
+                logger.warning(
+                    "Telegram polling connection issue (%s); retrying in 5 seconds.",
+                    exc.__class__.__name__,
+                )
+                await asyncio.sleep(5)
     finally:
         if backend_task is not None:
             backend_task.cancel()

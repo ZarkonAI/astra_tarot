@@ -400,28 +400,32 @@ span {
   position: relative;
 }
 
-.arcana-controls {
-  display: flex;
-  justify-content: flex-end;
+.arcana-carousel {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
   gap: 8px;
-  margin: -4px 0 10px;
+  align-items: center;
 }
 
 .arcana-control {
   display: grid;
   place-items: center;
-  align-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: 1px solid var(--color-border-soft);
   border-radius: 50%;
   color: var(--color-gold);
-  background: rgba(255, 255, 255, 0.07);
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.16), transparent 42%),
+    rgba(255, 255, 255, 0.07);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
   font-size: 24px;
   line-height: 1;
 }
 
 .arcana-strip {
+  min-width: 0;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 118px;
@@ -787,6 +791,20 @@ span {
   .reading-card__visual {
     width: 76px;
     height: 104px;
+  }
+
+  .arcana-carousel {
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    gap: 6px;
+  }
+
+  .arcana-control {
+    width: 34px;
+    height: 34px;
+  }
+
+  .arcana-strip {
+    grid-auto-columns: 108px;
   }
 }
 

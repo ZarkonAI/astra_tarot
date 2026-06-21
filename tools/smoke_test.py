@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import sys
+from tempfile import TemporaryDirectory
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -12,6 +14,7 @@ if VENV_SITE_PACKAGES.exists():
 
 from bot.config import Settings
 from bot.keyboards import admin_menu, main_menu
+from database.db import Database
 from services.readings.engine import create_draw
 from services.tarot.cards import CARD_BACK_ORNATE, MAJOR_ARCANA, REQUIRED_CARD_FIELDS, build_public_asset_url
 from services.tarot.spreads import SPREADS
@@ -58,6 +61,18 @@ def test_cards() -> None:
         == "https://zarkonai.github.io/astra_tarot/assets/cards/card_judgement.webp"
     )
 
+    expected_new_cards = {
+        "fool": "assets/cards/card_fool.webp",
+        "magician": "assets/cards/card_magician.webp",
+        "high_priestess": "assets/cards/card_priestess.webp",
+        "empress": "assets/cards/card_empress.webp",
+        "emperor": "assets/cards/card_emperor.webp",
+    }
+    card_paths = {card.slug: card.image_path for card in MAJOR_ARCANA}
+    for slug, image_path in expected_new_cards.items():
+        assert card_paths[slug] == image_path
+        assert (ROOT_DIR / "astra-tarot-miniapp-react" / "public" / image_path).exists()
+
 
 def test_main_menu_webapp_url() -> None:
     assert not _keyboard_has_web_app(main_menu(""))
@@ -86,11 +101,48 @@ def test_admin_helpers() -> None:
     assert admin_menu().inline_keyboard
 
 
+async def test_limit_storage_helpers() -> None:
+    class TelegramUser:
+        id = 987654321
+        username = "regular"
+        first_name = "Regular"
+        last_name = None
+        language_code = "ru"
+
+    with TemporaryDirectory() as tmp_dir:
+        db = Database(str(Path(tmp_dir) / "smoke.db"))
+        await db.init()
+        try:
+            await db.upsert_user_from_telegram(TelegramUser())
+            assert not await db.has_daily_usage(TelegramUser.id)
+
+            await db.mark_daily_usage(TelegramUser.id)
+            assert await db.has_daily_usage(TelegramUser.id)
+
+            user = await db.get_user(TelegramUser.id)
+            assert user is not None
+            assert int(user["has_used_free_full_spread"]) == 0
+
+            await db.mark_free_full_spread_used(TelegramUser.id)
+            user = await db.get_user(TelegramUser.id)
+            assert user is not None
+            assert int(user["has_used_free_full_spread"]) == 1
+
+            await db.reset_user_limits(TelegramUser.id)
+            assert not await db.has_daily_usage(TelegramUser.id)
+            user = await db.get_user(TelegramUser.id)
+            assert user is not None
+            assert int(user["has_used_free_full_spread"]) == 0
+        finally:
+            await db.close()
+
+
 def main() -> None:
     test_spreads()
     test_cards()
     test_main_menu_webapp_url()
     test_admin_helpers()
+    asyncio.run(test_limit_storage_helpers())
     print("Smoke test passed.")
 
 
