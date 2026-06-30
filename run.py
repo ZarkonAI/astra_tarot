@@ -10,6 +10,7 @@ from aiohttp import ClientConnectionError, ServerDisconnectedError
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramNetworkError
 
 from backend.app import create_app
 from bot.config import load_settings
@@ -79,10 +80,17 @@ async def main() -> None:
                     ai_service=ai_service,
                 )
                 break
-            except (ClientConnectionError, ServerDisconnectedError, OSError, asyncio.TimeoutError) as exc:
+            except (
+                TelegramNetworkError,
+                ClientConnectionError,
+                ServerDisconnectedError,
+                asyncio.TimeoutError,
+                OSError,
+            ) as exc:
+                # Temporary Telegram network failures are expected on unstable local networks.
                 logger.warning(
-                    "Telegram polling connection issue (%s); retrying in 5 seconds.",
-                    exc.__class__.__name__,
+                    "Telegram polling connection failed; retrying in 5 seconds: %s",
+                    exc,
                 )
                 await asyncio.sleep(5)
     finally:
