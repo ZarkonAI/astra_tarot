@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
+from datetime import datetime, timezone
 
 from bot.config import Settings
 from services.ai.prompts import build_reading_prompt
@@ -12,23 +14,39 @@ from services.tarot.spreads import Spread
 logger = logging.getLogger(__name__)
 
 
+def _short_error(exc: Exception) -> str:
+    message = str(exc).strip() or exc.__class__.__name__
+    message = message.replace("\n", " ").replace("\r", " ")
+    return message[:240]
+
+
 class AIService:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+        self._local_provider_logged = False
 
     async def generate_reading(
         self,
         spread: Spread,
         question: str,
         drawn_cards: list[DrawnCard],
+        user_id: int | None = None,
+        reading_id: int | None = None,
     ) -> str:
+        if self._settings.ai_provider == "local":
+            if not self._local_provider_logged:
+                logger.warning("AI provider is local; Gemini calls are disabled.")
+                self._local_provider_logged = True
+            return self._fallback_reading(spread, question, drawn_cards, user_id=user_id, reading_id=reading_id)
+
         if self._settings.ai_provider == "gemini" and self._settings.gemini_api_key:
             try:
                 return await self._generate_with_gemini(spread, question, drawn_cards)
-            except Exception:
-                logger.exception("Gemini request failed; falling back to local interpretation.")
+            except Exception as exc:
+                logger.warning("Gemini request failed; using fallback. Reason: %s", _short_error(exc))
+                logger.debug("Gemini request traceback", exc_info=True)
 
-        return self._fallback_reading(spread, question, drawn_cards)
+        return self._fallback_reading(spread, question, drawn_cards, user_id=user_id, reading_id=reading_id)
 
     async def _generate_with_gemini(
         self,
@@ -66,39 +84,121 @@ class AIService:
         spread: Spread,
         question: str,
         drawn_cards: list[DrawnCard],
+        user_id: int | None = None,
+        reading_id: int | None = None,
     ) -> str:
+        rng = random.Random(self._seed_material(spread, question, drawn_cards, user_id, reading_id))
         question_line = question.strip()
-        cards_lines = "\n".join(self._card_line(card) for card in drawn_cards)
-        intro_by_spread = {
-            "daily_card": "Сегодняшняя карта подсвечивает тон дня без лишнего шума.",
-            "quick": "Быстрый расклад собирает главный смысл в один ясный акцент.",
-            "love": "Сердечный расклад говорит мягко: здесь важны тон, чувство и честность с собой.",
-            "money": "Денежный путь смотрит на ресурс, возможность и практичный следующий шаг.",
-            "deep": "Глубокий расклад разворачивает ситуацию слоями: видимое, скрытое и то, что помогает двигаться дальше.",
-        }
-        advice_by_spread = {
-            "daily_card": "Возьмите из карты одно слово и проверьте, где оно отзывается в течение дня.",
-            "quick": "Сфокусируйтесь на ближайшем действии, которое можно сделать без драматизации.",
-            "love": "Выберите бережную формулировку для себя или другого человека и не спешите с выводом.",
-            "money": "Отделите реальный ресурс от тревожного ожидания и наметьте один спокойный шаг.",
-            "deep": "Запишите, что поддерживает вас сейчас, и что стоит мягко отпустить.",
-        }
-        question_part = f"\nВопрос: {question_line}\n" if question_line else ""
 
-        return (
-            "1. Общая энергия расклада\n"
-            f"{intro_by_spread.get(spread.slug, 'Карты собирают несколько важных символов в один образ.')}"
-            f"{question_part}\n\n"
-            "2. Карты\n"
-            f"{cards_lines}\n\n"
-            "3. Совет звезды-проводника\n"
-            f"{advice_by_spread.get(spread.slug, 'Выберите один честный и спокойный следующий шаг.')}"
-        )
+        intro_by_spread = {
+            "daily_card": [
+                "Сегодня расклад звучит как короткая настройка на день: без спешки, но с ясным акцентом.",
+                "Карта дня показывает, где легче сохранить внутреннюю собранность и не расплескать силы.",
+                "Главный знак на сегодня стоит читать через действие, которое можно сделать спокойно и вовремя.",
+            ],
+            "quick": [
+                "Быстрый расклад выделяет один практичный смысл и помогает не распыляться.",
+                "Здесь важен прямой ответ: что видно сейчас и какой шаг лучше не откладывать.",
+                "Расклад собирает ситуацию в короткий фокус, чтобы отделить главное от фонового шума.",
+            ],
+            "love": [
+                "В сердечной теме карты говорят мягко: через контакт, честность и бережные границы.",
+                "Этот расклад смотрит на чувства без нажима, оставляя место для живого диалога.",
+                "Важнее всего здесь тон общения: что согревает связь и что просит большей осторожности.",
+            ],
+            "money": [
+                "Денежный расклад переводит символы в язык ресурсов, решений и ближайших действий.",
+                "Здесь карты подсвечивают, где стоит беречь силы, а где можно действовать практичнее.",
+                "Финансовая тема сейчас требует трезвого взгляда: что уже есть, что мешает и куда двигаться дальше.",
+            ],
+            "deep": [
+                "Глубокий расклад разворачивает ситуацию слоями: видимое, скрытое, опору и следующий шаг.",
+                "Карты здесь работают не как быстрый ответ, а как карта местности с несколькими важными ориентирами.",
+                "Этот расклад полезен, когда нужно увидеть не только событие, но и внутреннюю механику происходящего.",
+            ],
+        }
+
+        card_energy_templates = [
+            "{position}: {title} раскрывает архетип «{archetype}». Свет карты — {light}; символ «{symbol}» помогает увидеть, где уже есть точка опоры.",
+            "В позиции «{position}» карта {title} говорит через образ «{symbol}»: здесь заметны {light}, а архетип «{archetype}» задаёт направление.",
+            "{title} на месте «{position}» показывает ресурс: {light}. Её символ — {symbol}, и он делает смысл карты более конкретным.",
+            "Позиция «{position}» окрашена картой {title}: архетип «{archetype}» выводит на первый план {light}.",
+        ]
+        shadow_templates = [
+            "Теневая сторона здесь — {shadow}; её лучше заметить заранее, чтобы не действовать на автомате.",
+            "Слабое место карты связано с темой: {shadow}. Это не запрет, а сигнал выбрать более точный темп.",
+            "Если ситуация начнёт буксовать, проверьте проявления тени: {shadow}.",
+            "Напряжение может прийти через {shadow}; мягкая внимательность снизит риск лишней резкости.",
+        ]
+        advice_templates = [
+            "Практичный ход: опереться на {light} и сделать один шаг, который не спорит с вашим состоянием.",
+            "Совет карты — использовать ресурс «{light}» и не кормить сценарий, где включается {shadow}.",
+            "Лучшее действие сейчас: выбрать форму, в которой {archetype} проявится спокойно и полезно.",
+            "Пусть символ «{symbol}» станет подсказкой: действуйте проще, но не теряйте смысл.",
+        ]
+        final_by_spread = {
+            "daily_card": [
+                "На сегодня этого достаточно: держите фокус маленьким, а выбор — честным.",
+                "Пусть день пройдёт через один ясный ориентир, без необходимости всё решать сразу.",
+            ],
+            "quick": [
+                "Ответ лучше проверить делом: один конкретный шаг покажет больше, чем долгие сомнения.",
+                "Сейчас полезна простота: меньше вариантов, больше аккуратного действия.",
+            ],
+            "love": [
+                "В отношениях поможет спокойный тон: говорить прямо, но без давления.",
+                "Бережность здесь сильнее контроля; оставьте место и себе, и другому человеку.",
+            ],
+            "money": [
+                "В ресурсах выигрывает не рывок, а понятный план и внимательность к деталям.",
+                "Сохраните практичность: сначала опора, затем решение, потом движение.",
+            ],
+            "deep": [
+                "Не сжимайте расклад до одного вывода: здесь важна последовательность маленьких прояснений.",
+                "Главная польза расклада — увидеть, где вы можете вернуть себе управление без жёсткости.",
+            ],
+        }
+
+        lines = [rng.choice(intro_by_spread.get(spread.slug, intro_by_spread["quick"]))]
+        if question_line:
+            lines.append(f"Вопрос: {question_line}")
+        lines.append("")
+
+        for drawn in drawn_cards:
+            card = drawn.card
+            payload = {
+                "position": drawn.position,
+                "title": card.title,
+                "archetype": card.archetype,
+                "light": card.light,
+                "shadow": card.shadow,
+                "symbol": card.symbol,
+            }
+            lines.append(rng.choice(card_energy_templates).format(**payload))
+            lines.append(rng.choice(shadow_templates).format(**payload))
+            lines.append(rng.choice(advice_templates).format(**payload))
+            lines.append("")
+
+        lines.append(rng.choice(final_by_spread.get(spread.slug, final_by_spread["quick"])))
+        return "\n".join(lines).strip()
 
     @staticmethod
-    def _card_line(drawn_card: DrawnCard) -> str:
-        return (
-            f"- {drawn_card.position}: {drawn_card.card.title}. "
-            f"Свет карты: {drawn_card.card.light}. "
-            f"Тень, которую стоит заметить: {drawn_card.card.shadow}."
+    def _seed_material(
+        spread: Spread,
+        question: str,
+        drawn_cards: list[DrawnCard],
+        user_id: int | None,
+        reading_id: int | None,
+    ) -> str:
+        cards_part = "|".join(f"{drawn.position}:{drawn.card.slug}:{drawn.card.title}" for drawn in drawn_cards)
+        time_part = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        return "|".join(
+            [
+                str(user_id or "anonymous"),
+                str(reading_id or time_part),
+                spread.slug,
+                spread.title,
+                question.strip(),
+                cards_part,
+            ]
         )

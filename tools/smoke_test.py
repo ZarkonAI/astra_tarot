@@ -14,10 +14,41 @@ if VENV_SITE_PACKAGES.exists():
 
 from bot.config import Settings
 from bot.keyboards import admin_menu, main_menu
+from bot.routers.admin import admin_command, admin_reset_callback, reset_me_command
 from database.db import Database
+from services.ai.service import AIService
 from services.readings.engine import create_draw
 from services.tarot.cards import CARD_BACK_ORNATE, MAJOR_ARCANA, REQUIRED_CARD_FIELDS, build_public_asset_url
 from services.tarot.spreads import SPREADS
+
+
+
+class FakeUser:
+    def __init__(self, user_id: int) -> None:
+        self.id = user_id
+        self.username = "user"
+        self.first_name = "User"
+        self.last_name = None
+        self.language_code = "ru"
+
+
+class FakeMessage:
+    def __init__(self, user_id: int) -> None:
+        self.from_user = FakeUser(user_id)
+        self.answers: list[tuple[tuple[object, ...], dict[str, object]]] = []
+
+    async def answer(self, *args, **kwargs) -> None:
+        self.answers.append((args, kwargs))
+
+
+class FakeCallback:
+    def __init__(self, user_id: int) -> None:
+        self.from_user = FakeUser(user_id)
+        self.message = FakeMessage(user_id)
+        self.answers: list[tuple[tuple[object, ...], dict[str, object]]] = []
+
+    async def answer(self, *args, **kwargs) -> None:
+        self.answers.append((args, kwargs))
 
 
 def _keyboard_has_web_app(markup) -> bool:
@@ -137,12 +168,84 @@ async def test_limit_storage_helpers() -> None:
             await db.close()
 
 
+
+async def test_admin_silent_for_regular_users() -> None:
+    settings = Settings(
+        bot_token="",
+        gemini_api_key="",
+        gemini_model="gemini-2.5-flash",
+        ai_provider="gemini",
+        database_path="database/astra_tarot.db",
+        miniapp_url="https://zarkonai.github.io/astra_tarot/",
+        public_base_url="https://zarkonai.github.io/astra_tarot/",
+        host="0.0.0.0",
+        port=8000,
+        start_backend=True,
+        admin_ids={123456789},
+        manual_payment_contact="",
+    )
+
+    with TemporaryDirectory() as tmp_dir:
+        db = Database(str(Path(tmp_dir) / "admin.db"))
+        await db.init()
+        try:
+            admin_message = FakeMessage(987654321)
+            reset_message = FakeMessage(987654321)
+            callback = FakeCallback(987654321)
+
+            await admin_command(admin_message, settings)
+            await reset_me_command(reset_message, settings, db)
+            await admin_reset_callback(callback, settings, db)
+
+            assert admin_message.answers == []
+            assert reset_message.answers == []
+            assert callback.message.answers == []
+            assert len(callback.answers) == 1
+            assert callback.answers[0][0] == ()
+            assert callback.answers[0][1] == {}
+        finally:
+            await db.close()
+
+
+async def test_local_fallback_variation() -> None:
+    settings = Settings(
+        bot_token="",
+        gemini_api_key="",
+        gemini_model="gemini-2.5-flash",
+        ai_provider="local",
+        database_path="database/astra_tarot.db",
+        miniapp_url="https://zarkonai.github.io/astra_tarot/",
+        public_base_url="https://zarkonai.github.io/astra_tarot/",
+        host="0.0.0.0",
+        port=8000,
+        start_backend=True,
+        admin_ids=set(),
+        manual_payment_contact="",
+    )
+    service = AIService(settings)
+    daily_cards = create_draw(SPREADS["daily_card"])
+    quick_cards = create_draw(SPREADS["quick"])
+
+    first_user = await service.generate_reading(SPREADS["daily_card"], "", daily_cards, user_id=1001, reading_id=1)
+    second_user = await service.generate_reading(SPREADS["daily_card"], "", daily_cards, user_id=1002, reading_id=1)
+    quick_text = await service.generate_reading(SPREADS["quick"], "", quick_cards, user_id=1001, reading_id=2)
+
+    assert first_user != second_user
+    assert first_user != quick_text
+
+    forbidden_words = ["развлекательный", "рефлексивный", "fallback", "gemini", "ошибка api"]
+    for text in (first_user, second_user, quick_text):
+        lowered = text.lower()
+        for word in forbidden_words:
+            assert word not in lowered
 def main() -> None:
     test_spreads()
     test_cards()
     test_main_menu_webapp_url()
     test_admin_helpers()
     asyncio.run(test_limit_storage_helpers())
+    asyncio.run(test_admin_silent_for_regular_users())
+    asyncio.run(test_local_fallback_variation())
     print("Smoke test passed.")
 
 

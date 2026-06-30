@@ -90,7 +90,7 @@ async def _send_reading(
     await message.answer(
         f"{spread.title}\n\nКарты открыты:\n{_format_cards(drawn_cards)}\n\nГотовлю толкование..."
     )
-    response_text = await ai_service.generate_reading(spread, question, drawn_cards)
+    response_text = await ai_service.generate_reading(spread, question, drawn_cards, user_id=telegram_user.id)
     public_base_url = _public_base_url(settings)
     cards_payload = [drawn.to_public_dict(public_base_url) for drawn in drawn_cards]
 
