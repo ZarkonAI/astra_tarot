@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -12,11 +13,11 @@ VENV_SITE_PACKAGES = ROOT_DIR / ".venv" / "Lib" / "site-packages"
 if VENV_SITE_PACKAGES.exists():
     sys.path.insert(0, str(VENV_SITE_PACKAGES))
 
-from bot.config import Settings
+from bot.config import Settings, load_settings
 from bot.keyboards import admin_menu, main_menu
 from bot.routers.admin import admin_command, admin_reset_callback, reset_me_command
 from database.db import Database
-from services.ai.service import AIService
+from services.ai.service import AIService, _is_bad_ai_text
 from services.readings.engine import create_draw
 from services.tarot.cards import CARD_BACK_ORNATE, MAJOR_ARCANA, REQUIRED_CARD_FIELDS, build_public_asset_url
 from services.tarot.spreads import SPREADS
@@ -105,6 +106,106 @@ def test_cards() -> None:
         assert (ROOT_DIR / "astra-tarot-miniapp-react" / "public" / image_path).exists()
 
 
+def test_openrouter_settings() -> None:
+    env_keys = [
+        "AI_PROVIDER",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_HTTP_REFERER",
+        "OPENROUTER_X_TITLE",
+        "OPENROUTER_TIMEOUT_SECONDS",
+        "OPENROUTER_TEMPERATURE",
+        "OPENROUTER_MAX_TOKENS_DAILY",
+        "OPENROUTER_MAX_TOKENS_QUICK",
+        "OPENROUTER_MAX_TOKENS_LOVE",
+        "OPENROUTER_MAX_TOKENS_MONEY",
+        "OPENROUTER_MAX_TOKENS_DEEP",
+    ]
+    old_values = {key: os.environ.get(key) for key in env_keys}
+    try:
+        os.environ["AI_PROVIDER"] = "openrouter"
+        os.environ["OPENROUTER_API_KEY"] = "read-test-key"
+        os.environ.pop("OPENROUTER_MODEL", None)
+        os.environ.pop("OPENROUTER_HTTP_REFERER", None)
+        os.environ.pop("OPENROUTER_X_TITLE", None)
+        os.environ.pop("OPENROUTER_TIMEOUT_SECONDS", None)
+        os.environ.pop("OPENROUTER_TEMPERATURE", None)
+        os.environ.pop("OPENROUTER_MAX_TOKENS_DAILY", None)
+        os.environ.pop("OPENROUTER_MAX_TOKENS_QUICK", None)
+        os.environ.pop("OPENROUTER_MAX_TOKENS_LOVE", None)
+        os.environ.pop("OPENROUTER_MAX_TOKENS_MONEY", None)
+        os.environ.pop("OPENROUTER_MAX_TOKENS_DEEP", None)
+
+        settings = load_settings()
+        assert settings.openrouter_api_key == "read-test-key"
+        assert settings.openrouter_model == "qwen/qwen3-next-80b-a3b-instruct:free"
+        assert settings.openrouter_http_referer == "https://zarkonai.github.io/astra_tarot/"
+        assert settings.openrouter_x_title == "Astra Tarot"
+        assert settings.openrouter_timeout_seconds == 45
+        assert settings.openrouter_temperature == 0.65
+        assert settings.openrouter_max_tokens_daily == 500
+        assert settings.openrouter_max_tokens_quick == 650
+        assert settings.openrouter_max_tokens_love == 850
+        assert settings.openrouter_max_tokens_money == 850
+        assert settings.openrouter_max_tokens_deep == 1100
+        assert settings.ai_provider == "openrouter"
+
+        for provider in ("openrouter", "gemini", "local"):
+            os.environ["AI_PROVIDER"] = provider
+            assert load_settings().ai_provider == provider
+    finally:
+        for key, value in old_values.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+def test_ai_text_quality_filter() -> None:
+    good_text = (
+        "Это нормальный русский текст для расклада: он звучит ясно, спокойно и последовательно. "
+        "В нем достаточно кириллицы, нет странных слов, смешения языков и технических упоминаний."
+    )
+    assert not _is_bad_ai_text(good_text)
+    assert _is_bad_ai_text("residue multiply biome странный короткий текст без нормального смысла")
+    assert _is_bad_ai_text("Это текст с 龛 символом, который должен быть отброшен как мусорный ответ модели.")
+    assert _is_bad_ai_text("OpenRouter fallback API error ошибка API")
+
+
+def test_openrouter_max_tokens_by_spread() -> None:
+    settings = Settings(
+        bot_token="",
+        gemini_api_key="",
+        gemini_model="gemini-2.5-flash",
+        openrouter_api_key="",
+        openrouter_model="qwen/qwen3-next-80b-a3b-instruct:free",
+        openrouter_http_referer="https://zarkonai.github.io/astra_tarot/",
+        openrouter_x_title="Astra Tarot",
+        openrouter_timeout_seconds=45,
+        openrouter_temperature=0.65,
+        openrouter_max_tokens_daily=501,
+        openrouter_max_tokens_quick=651,
+        openrouter_max_tokens_love=851,
+        openrouter_max_tokens_money=852,
+        openrouter_max_tokens_deep=1101,
+        ai_provider="openrouter",
+        database_path="database/astra_tarot.db",
+        miniapp_url="https://zarkonai.github.io/astra_tarot/",
+        public_base_url="https://zarkonai.github.io/astra_tarot/",
+        host="0.0.0.0",
+        port=8000,
+        start_backend=True,
+        admin_ids=set(),
+        manual_payment_contact="",
+    )
+    service = AIService(settings)
+    assert service._get_openrouter_max_tokens("daily_card") == 501
+    assert service._get_openrouter_max_tokens("quick") == 651
+    assert service._get_openrouter_max_tokens("love") == 851
+    assert service._get_openrouter_max_tokens("money") == 852
+    assert service._get_openrouter_max_tokens("deep") == 1101
+    assert service._get_openrouter_max_tokens("unknown") == 800
+
 def test_main_menu_webapp_url() -> None:
     assert not _keyboard_has_web_app(main_menu(""))
     assert not _keyboard_has_web_app(main_menu("http://localhost:5173"))
@@ -117,6 +218,17 @@ def test_admin_helpers() -> None:
         bot_token="",
         gemini_api_key="",
         gemini_model="gemini-1.5-flash",
+        openrouter_api_key="",
+        openrouter_model="openrouter/free",
+        openrouter_http_referer="https://zarkonai.github.io/astra_tarot/",
+        openrouter_x_title="Astra Tarot",
+        openrouter_timeout_seconds=45,
+        openrouter_temperature=0.65,
+        openrouter_max_tokens_daily=500,
+        openrouter_max_tokens_quick=650,
+        openrouter_max_tokens_love=850,
+        openrouter_max_tokens_money=850,
+        openrouter_max_tokens_deep=1100,
         ai_provider="gemini",
         database_path="database/astra_tarot.db",
         miniapp_url="https://zarkonai.github.io/astra_tarot/",
@@ -174,6 +286,17 @@ async def test_admin_silent_for_regular_users() -> None:
         bot_token="",
         gemini_api_key="",
         gemini_model="gemini-2.5-flash",
+        openrouter_api_key="",
+        openrouter_model="openrouter/free",
+        openrouter_http_referer="https://zarkonai.github.io/astra_tarot/",
+        openrouter_x_title="Astra Tarot",
+        openrouter_timeout_seconds=45,
+        openrouter_temperature=0.65,
+        openrouter_max_tokens_daily=500,
+        openrouter_max_tokens_quick=650,
+        openrouter_max_tokens_love=850,
+        openrouter_max_tokens_money=850,
+        openrouter_max_tokens_deep=1100,
         ai_provider="gemini",
         database_path="database/astra_tarot.db",
         miniapp_url="https://zarkonai.github.io/astra_tarot/",
@@ -212,6 +335,17 @@ async def test_local_fallback_variation() -> None:
         bot_token="",
         gemini_api_key="",
         gemini_model="gemini-2.5-flash",
+        openrouter_api_key="",
+        openrouter_model="openrouter/free",
+        openrouter_http_referer="https://zarkonai.github.io/astra_tarot/",
+        openrouter_x_title="Astra Tarot",
+        openrouter_timeout_seconds=45,
+        openrouter_temperature=0.65,
+        openrouter_max_tokens_daily=500,
+        openrouter_max_tokens_quick=650,
+        openrouter_max_tokens_love=850,
+        openrouter_max_tokens_money=850,
+        openrouter_max_tokens_deep=1100,
         ai_provider="local",
         database_path="database/astra_tarot.db",
         miniapp_url="https://zarkonai.github.io/astra_tarot/",
@@ -233,19 +367,58 @@ async def test_local_fallback_variation() -> None:
     assert first_user != second_user
     assert first_user != quick_text
 
-    forbidden_words = ["развлекательный", "рефлексивный", "fallback", "gemini", "ошибка api"]
+    forbidden_words = ["развлекательный", "рефлексивный", "fallback", "gemini", "openrouter", "ошибка api"]
     for text in (first_user, second_user, quick_text):
         lowered = text.lower()
         for word in forbidden_words:
             assert word not in lowered
+async def test_openrouter_empty_key_fallback() -> None:
+    settings = Settings(
+        bot_token="",
+        gemini_api_key="",
+        gemini_model="gemini-2.5-flash",
+        openrouter_api_key="",
+        openrouter_model="openrouter/free",
+        openrouter_http_referer="https://zarkonai.github.io/astra_tarot/",
+        openrouter_x_title="Astra Tarot",
+        openrouter_timeout_seconds=45,
+        openrouter_temperature=0.65,
+        openrouter_max_tokens_daily=500,
+        openrouter_max_tokens_quick=650,
+        openrouter_max_tokens_love=850,
+        openrouter_max_tokens_money=850,
+        openrouter_max_tokens_deep=1100,
+        ai_provider="openrouter",
+        database_path="database/astra_tarot.db",
+        miniapp_url="https://zarkonai.github.io/astra_tarot/",
+        public_base_url="https://zarkonai.github.io/astra_tarot/",
+        host="0.0.0.0",
+        port=8000,
+        start_backend=True,
+        admin_ids=set(),
+        manual_payment_contact="",
+    )
+    service = AIService(settings)
+    drawn_cards = create_draw(SPREADS["daily_card"])
+    text = await service.generate_reading(SPREADS["daily_card"], "", drawn_cards, user_id=2001, reading_id=1)
+    assert text.strip()
+    lowered = text.lower()
+    for word in ("gemini", "openrouter", "fallback", "ошибка api"):
+        assert word not in lowered
+
+
 def main() -> None:
     test_spreads()
     test_cards()
+    test_openrouter_settings()
+    test_ai_text_quality_filter()
+    test_openrouter_max_tokens_by_spread()
     test_main_menu_webapp_url()
     test_admin_helpers()
     asyncio.run(test_limit_storage_helpers())
     asyncio.run(test_admin_silent_for_regular_users())
     asyncio.run(test_local_fallback_variation())
+    asyncio.run(test_openrouter_empty_key_fallback())
     print("Smoke test passed.")
 
 

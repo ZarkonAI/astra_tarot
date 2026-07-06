@@ -4,6 +4,9 @@ import asyncio
 import logging
 import random
 from datetime import datetime, timezone
+from typing import Any
+
+import httpx
 
 from bot.config import Settings
 from services.ai.prompts import build_reading_prompt
@@ -20,6 +23,83 @@ def _short_error(exc: Exception) -> str:
     return message[:240]
 
 
+def _short_response_text(response: httpx.Response) -> str:
+    text = response.text.strip().replace("\n", " ").replace("\r", " ")
+    return text[:180] or "empty response"
+
+
+class OpenRouterTimeoutError(RuntimeError):
+    pass
+
+
+class OpenRouterLowQualityTextError(RuntimeError):
+    pass
+
+
+def _extract_openrouter_content(data: dict[str, Any]) -> str:
+    try:
+        content = data["choices"][0]["message"].get("content", "")
+    except (KeyError, IndexError, TypeError):
+        return ""
+    if not isinstance(content, str):
+        return ""
+    return content.strip()
+
+
+def _is_cjk_character(char: str) -> bool:
+    code = ord(char)
+    return (
+        0x3400 <= code <= 0x4DBF
+        or 0x4E00 <= code <= 0x9FFF
+        or 0x3040 <= code <= 0x30FF
+        or 0xAC00 <= code <= 0xD7AF
+    )
+
+
+def _is_bad_ai_text(text: str) -> bool:
+    normalized = (text or "").strip()
+    if not normalized or len(normalized) < 80:
+        return True
+
+    lowered = normalized.lower()
+    forbidden_markers = (
+        "residue",
+        "multiply",
+        "biome",
+        "arquétique",
+        "arquetique",
+        "нейтросфер",
+        "танцет",
+        "龛",
+        "openrouter",
+        "gemini",
+        "fallback",
+        "api error",
+        "ошибка api",
+    )
+    if any(marker in lowered for marker in forbidden_markers):
+        return True
+    if any(_is_cjk_character(char) for char in normalized):
+        return True
+
+    cyrillic_letters = sum(1 for char in normalized if "а" <= char.lower() <= "я" or char in "Ёё")
+    latin_letters = sum(1 for char in normalized if "a" <= char.lower() <= "z")
+    if cyrillic_letters < 50:
+        return True
+    return latin_letters > cyrillic_letters * 0.08
+
+
+def _openrouter_response_structure(spread_slug: str) -> str:
+    structures = {
+        "daily_card": "2-4 коротких абзаца без длинных списков; живой совет на день.",
+        "quick": "Короткое вступление; карта или карты; смысл ситуации; совет.",
+        "love": "Мягкий эмоциональный стиль; чувства, контакт и границы; бережный совет.",
+        "money": "Практичный стиль; ресурсы, решения и ближайший шаг; без финансовых гарантий.",
+        "deep": "Понятная структура, максимум 4-6 абзацев; каждый абзац 2-4 предложения; без длинных списков и мистического бреда; общий вывод.",
+    }
+    return structures.get(spread_slug, structures["quick"])
+
+
 class AIService:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
@@ -33,20 +113,173 @@ class AIService:
         user_id: int | None = None,
         reading_id: int | None = None,
     ) -> str:
-        if self._settings.ai_provider == "local":
+        provider = self._settings.ai_provider
+        if provider == "local":
             if not self._local_provider_logged:
-                logger.warning("AI provider is local; Gemini calls are disabled.")
+                logger.warning("AI provider is local; using local fallback.")
                 self._local_provider_logged = True
             return self._fallback_reading(spread, question, drawn_cards, user_id=user_id, reading_id=reading_id)
 
-        if self._settings.ai_provider == "gemini" and self._settings.gemini_api_key:
+        if provider == "openrouter":
+            try:
+                return await self._generate_with_openrouter(spread, question, drawn_cards)
+            except OpenRouterTimeoutError:
+                logger.warning("OpenRouter timeout; using fallback.")
+                logger.debug("OpenRouter timeout traceback", exc_info=True)
+            except OpenRouterLowQualityTextError:
+                logger.debug("OpenRouter low-quality text traceback", exc_info=True)
+            except Exception as exc:
+                logger.warning("OpenRouter request failed; using fallback. Reason: %s", _short_error(exc))
+                logger.debug("OpenRouter request traceback", exc_info=True)
+            return self._fallback_reading(spread, question, drawn_cards, user_id=user_id, reading_id=reading_id)
+
+        if provider == "gemini":
             try:
                 return await self._generate_with_gemini(spread, question, drawn_cards)
             except Exception as exc:
                 logger.warning("Gemini request failed; using fallback. Reason: %s", _short_error(exc))
                 logger.debug("Gemini request traceback", exc_info=True)
+            return self._fallback_reading(spread, question, drawn_cards, user_id=user_id, reading_id=reading_id)
 
+        logger.warning("Unknown AI_PROVIDER=%s; using local fallback.", provider)
         return self._fallback_reading(spread, question, drawn_cards, user_id=user_id, reading_id=reading_id)
+
+    async def _generate_with_openrouter(
+        self,
+        spread: Spread,
+        question: str,
+        drawn_cards: list[DrawnCard],
+    ) -> str:
+        if not self._settings.openrouter_api_key:
+            raise RuntimeError("OpenRouter API key is empty")
+
+        for is_retry in (False, True):
+            payload = {
+                "model": self._settings.openrouter_model,
+                "messages": [
+                    {"role": "system", "content": self._openrouter_system_prompt()},
+                    {
+                        "role": "user",
+                        "content": self._openrouter_user_prompt(spread, question, drawn_cards, is_retry=is_retry),
+                    },
+                ],
+                "temperature": self._settings.openrouter_temperature,
+                "max_tokens": self._get_openrouter_max_tokens(spread.slug),
+            }
+            data = await self._post_openrouter(payload)
+            logger.info("OpenRouter model used: %s", data.get("model", self._settings.openrouter_model))
+
+            content = _extract_openrouter_content(data)
+            if not _is_bad_ai_text(content):
+                return content
+
+        logger.warning("OpenRouter returned low-quality text twice; using local fallback.")
+        raise OpenRouterLowQualityTextError("OpenRouter returned low-quality text twice")
+
+    async def _post_openrouter(self, payload: dict[str, Any]) -> dict[str, Any]:
+        headers = {
+            "Authorization": f"Bearer {self._settings.openrouter_api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": self._settings.openrouter_http_referer,
+            "X-Title": self._settings.openrouter_x_title,
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=self._settings.openrouter_timeout_seconds) as client:
+                response = await asyncio.wait_for(
+                    client.post(
+                        "https://openrouter.ai/api/v1/chat/completions",
+                        headers=headers,
+                        json=payload,
+                    ),
+                    timeout=self._settings.openrouter_timeout_seconds,
+                )
+        except (httpx.TimeoutException, asyncio.TimeoutError) as exc:
+            raise OpenRouterTimeoutError("OpenRouter request timed out") from exc
+        except httpx.HTTPError as exc:
+            raise RuntimeError(f"OpenRouter HTTP error: {_short_error(exc)}") from exc
+
+        if response.status_code == 401:
+            raise RuntimeError("OpenRouter authentication failed")
+        if response.status_code == 429:
+            raise RuntimeError("OpenRouter rate limit reached")
+        if response.status_code != 200:
+            raise RuntimeError(f"OpenRouter status {response.status_code}: {_short_response_text(response)}")
+
+        try:
+            return response.json()
+        except ValueError as exc:
+            raise RuntimeError("OpenRouter returned invalid JSON") from exc
+
+    def _get_openrouter_max_tokens(self, spread_id: str) -> int:
+        max_tokens_by_spread = {
+            "daily_card": self._settings.openrouter_max_tokens_daily,
+            "quick": self._settings.openrouter_max_tokens_quick,
+            "love": self._settings.openrouter_max_tokens_love,
+            "money": self._settings.openrouter_max_tokens_money,
+            "deep": self._settings.openrouter_max_tokens_deep,
+        }
+        return max_tokens_by_spread.get(spread_id, 800)
+
+    @staticmethod
+    def _openrouter_system_prompt() -> str:
+        return (
+            "Ты — мягкий русскоязычный интерпретатор символических раскладов Astra Tarot.\n"
+            "Пиши уважительно на \"вы\".\n"
+            "Отвечай только на русском языке.\n"
+            "Не используй английские слова, латиницу, китайские, японские или корейские символы, псевдослова и случайные символы.\n"
+            "Если не уверен в формулировке, пиши проще.\n"
+            "Не используй странные слова вроде residue, multiply, signs, biome, arquétique.\n"
+            "Не смешивай языки.\n"
+            "Не упоминай модель, API, OpenRouter, Gemini, fallback и ошибки.\n"
+            "Не добавляй дисклеймеры.\n"
+            "Не делай слишком поэтичный бессвязный текст.\n"
+            "Пиши красиво, но понятно.\n"
+            "Лучше коротко и ясно, чем длинно и мутно.\n"
+            "Стиль: мистический, ясный, теплый, без запугивания и фатализма.\n"
+            "Не упоминай, что ты ИИ.\n"
+            "Не обещай точных событий.\n"
+            "Не используй манипулятивные формулировки.\n"
+            "Не повторяй шаблонные фразы.\n"
+            "Дай готовую трактовку, которую можно сразу отправить пользователю."
+        )
+
+    @staticmethod
+    def _openrouter_user_prompt(
+        spread: Spread,
+        question: str,
+        drawn_cards: list[DrawnCard],
+        is_retry: bool = False,
+    ) -> str:
+        question_text = question.strip() or "Пользователь не указал отдельный вопрос."
+        cards_text = "\n".join(
+            "\n".join(
+                [
+                    f"- Позиция: {drawn.position}",
+                    f"  Карта: {drawn.card.title}",
+                    f"  Светлое значение: {drawn.card.light}",
+                    f"  Теневая подсказка: {drawn.card.shadow}",
+                    f"  Символ: {drawn.card.symbol}",
+                    f"  Архетип: {drawn.card.archetype}",
+                ]
+            )
+            for drawn in drawn_cards
+        )
+        retry_text = (
+            "Предыдущая попытка была отклонена, потому что текст был некачественным.\n"
+            "Верните только чистый, понятный русский текст без латиницы и случайных слов.\n\n"
+            if is_retry
+            else ""
+        )
+        structure = _openrouter_response_structure(spread.slug)
+        return (
+            f"{retry_text}"
+            f"Название расклада: {spread.title}\n"
+            f"Тип расклада: {spread.slug}\n"
+            f"Вопрос пользователя: {question_text}\n\n"
+            f"Карты:\n{cards_text}\n\n"
+            f"Желаемая структура ответа:\n{structure}"
+        )
 
     async def _generate_with_gemini(
         self,

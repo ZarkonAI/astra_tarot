@@ -17,6 +17,17 @@ class Settings:
     bot_token: str
     gemini_api_key: str
     gemini_model: str
+    openrouter_api_key: str
+    openrouter_model: str
+    openrouter_http_referer: str
+    openrouter_x_title: str
+    openrouter_timeout_seconds: float
+    openrouter_temperature: float
+    openrouter_max_tokens_daily: int
+    openrouter_max_tokens_quick: int
+    openrouter_max_tokens_love: int
+    openrouter_max_tokens_money: int
+    openrouter_max_tokens_deep: int
     ai_provider: str
     database_path: str
     miniapp_url: str
@@ -88,8 +99,22 @@ def load_settings() -> Settings:
     return Settings(
         bot_token=os.getenv("BOT_TOKEN", "").strip(),
         gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
-        gemini_model=os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip(),
-        ai_provider=os.getenv("AI_PROVIDER", "gemini").strip().lower(),
+        gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip(),
+        openrouter_api_key=os.getenv("OPENROUTER_API_KEY", "").strip(),
+        openrouter_model=os.getenv("OPENROUTER_MODEL", "qwen/qwen3-next-80b-a3b-instruct:free").strip(),
+        openrouter_http_referer=os.getenv(
+            "OPENROUTER_HTTP_REFERER",
+            "https://zarkonai.github.io/astra_tarot/",
+        ).strip(),
+        openrouter_x_title=os.getenv("OPENROUTER_X_TITLE", "Astra Tarot").strip(),
+        openrouter_timeout_seconds=float(os.getenv("OPENROUTER_TIMEOUT_SECONDS", "45")),
+        openrouter_temperature=float(os.getenv("OPENROUTER_TEMPERATURE", "0.65")),
+        openrouter_max_tokens_daily=int(os.getenv("OPENROUTER_MAX_TOKENS_DAILY", "500")),
+        openrouter_max_tokens_quick=int(os.getenv("OPENROUTER_MAX_TOKENS_QUICK", "650")),
+        openrouter_max_tokens_love=int(os.getenv("OPENROUTER_MAX_TOKENS_LOVE", "850")),
+        openrouter_max_tokens_money=int(os.getenv("OPENROUTER_MAX_TOKENS_MONEY", "850")),
+        openrouter_max_tokens_deep=int(os.getenv("OPENROUTER_MAX_TOKENS_DEEP", "1100")),
+        ai_provider=os.getenv("AI_PROVIDER", "openrouter").strip().lower(),
         database_path=str(resolved_database_path),
         miniapp_url=os.getenv("MINIAPP_URL", "").strip(),
         public_base_url=os.getenv("PUBLIC_BASE_URL", "").strip(),
