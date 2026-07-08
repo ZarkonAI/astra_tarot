@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -19,10 +19,12 @@ class Settings:
     gemini_model: str
     openrouter_api_key: str
     openrouter_model: str
+    openrouter_models: list[str]
     openrouter_http_referer: str
     openrouter_x_title: str
     openrouter_timeout_seconds: float
     openrouter_temperature: float
+    openrouter_cooldown_seconds: int
     openrouter_max_tokens_daily: int
     openrouter_max_tokens_quick: int
     openrouter_max_tokens_love: int
@@ -32,10 +34,21 @@ class Settings:
     database_path: str
     miniapp_url: str
     public_base_url: str
+    cors_allowed_origins: list[str]
     host: str
     port: int
     start_backend: bool
     admin_ids: set[int]
+    ritual_delays_enabled: bool
+    ritual_card_delay_daily_min: float
+    ritual_card_delay_daily_max: float
+    ritual_card_delay_quick_min: float
+    ritual_card_delay_quick_max: float
+    ritual_card_delay_full_min: float
+    ritual_card_delay_full_max: float
+    ritual_interpretation_delay_min: float
+    ritual_interpretation_delay_max: float
+    admin_skip_ritual_delays: bool
     manual_payment_contact: str
 
     def is_admin(self, user_id: int | None) -> bool:
@@ -46,6 +59,12 @@ def _parse_bool(value: str | None, default: bool = False) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _parse_csv(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 def _parse_admin_ids(value: str | None) -> set[int]:
@@ -90,18 +109,29 @@ def is_valid_telegram_webapp_url(url: str | None) -> bool:
     return True
 
 
+def _openrouter_model_chain() -> tuple[str, list[str]]:
+    openrouter_model = os.getenv("OPENROUTER_MODEL", "qwen/qwen3-next-80b-a3b-instruct:free").strip()
+    openrouter_models = _parse_csv(os.getenv("OPENROUTER_MODELS"))
+    if not openrouter_models:
+        openrouter_models = [openrouter_model] if openrouter_model else ["openrouter/free"]
+    return openrouter_model, openrouter_models
+
+
 def load_settings() -> Settings:
     database_path = os.getenv("DATABASE_PATH", "database/astra_tarot.db").strip()
     resolved_database_path = Path(database_path)
     if not resolved_database_path.is_absolute():
         resolved_database_path = ROOT_DIR / resolved_database_path
 
+    openrouter_model, openrouter_models = _openrouter_model_chain()
+
     return Settings(
         bot_token=os.getenv("BOT_TOKEN", "").strip(),
         gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
         gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip(),
         openrouter_api_key=os.getenv("OPENROUTER_API_KEY", "").strip(),
-        openrouter_model=os.getenv("OPENROUTER_MODEL", "qwen/qwen3-next-80b-a3b-instruct:free").strip(),
+        openrouter_model=openrouter_model,
+        openrouter_models=openrouter_models,
         openrouter_http_referer=os.getenv(
             "OPENROUTER_HTTP_REFERER",
             "https://zarkonai.github.io/astra_tarot/",
@@ -109,6 +139,7 @@ def load_settings() -> Settings:
         openrouter_x_title=os.getenv("OPENROUTER_X_TITLE", "Astra Tarot").strip(),
         openrouter_timeout_seconds=float(os.getenv("OPENROUTER_TIMEOUT_SECONDS", "45")),
         openrouter_temperature=float(os.getenv("OPENROUTER_TEMPERATURE", "0.65")),
+        openrouter_cooldown_seconds=int(os.getenv("OPENROUTER_COOLDOWN_SECONDS", "60")),
         openrouter_max_tokens_daily=int(os.getenv("OPENROUTER_MAX_TOKENS_DAILY", "500")),
         openrouter_max_tokens_quick=int(os.getenv("OPENROUTER_MAX_TOKENS_QUICK", "650")),
         openrouter_max_tokens_love=int(os.getenv("OPENROUTER_MAX_TOKENS_LOVE", "850")),
@@ -118,9 +149,27 @@ def load_settings() -> Settings:
         database_path=str(resolved_database_path),
         miniapp_url=os.getenv("MINIAPP_URL", "").strip(),
         public_base_url=os.getenv("PUBLIC_BASE_URL", "").strip(),
+        cors_allowed_origins=_parse_csv(os.getenv("CORS_ALLOWED_ORIGINS")) or [
+            "https://zarkonai.github.io",
+            "https://web.telegram.org",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
         host=os.getenv("HOST", "0.0.0.0").strip(),
         port=int(os.getenv("PORT", "8000")),
         start_backend=_parse_bool(os.getenv("START_BACKEND"), default=True),
         admin_ids=_parse_admin_ids(os.getenv("ADMIN_IDS")),
+        ritual_delays_enabled=_parse_bool(os.getenv("RITUAL_DELAYS_ENABLED"), default=True),
+        ritual_card_delay_daily_min=float(os.getenv("RITUAL_CARD_DELAY_DAILY_MIN", "3")),
+        ritual_card_delay_daily_max=float(os.getenv("RITUAL_CARD_DELAY_DAILY_MAX", "5")),
+        ritual_card_delay_quick_min=float(os.getenv("RITUAL_CARD_DELAY_QUICK_MIN", "4")),
+        ritual_card_delay_quick_max=float(os.getenv("RITUAL_CARD_DELAY_QUICK_MAX", "7")),
+        ritual_card_delay_full_min=float(os.getenv("RITUAL_CARD_DELAY_FULL_MIN", "6")),
+        ritual_card_delay_full_max=float(os.getenv("RITUAL_CARD_DELAY_FULL_MAX", "10")),
+        ritual_interpretation_delay_min=float(os.getenv("RITUAL_INTERPRETATION_DELAY_MIN", "3")),
+        ritual_interpretation_delay_max=float(os.getenv("RITUAL_INTERPRETATION_DELAY_MAX", "5")),
+        admin_skip_ritual_delays=_parse_bool(os.getenv("ADMIN_SKIP_RITUAL_DELAYS"), default=False),
         manual_payment_contact=os.getenv("MANUAL_PAYMENT_CONTACT", "").strip(),
     )
+
+

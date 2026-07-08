@@ -1,4 +1,4 @@
-#root {
+﻿#root {
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -408,10 +408,13 @@ span {
 }
 
 .arcana-control {
+  position: relative;
+  overflow: hidden;
   display: grid;
   place-items: center;
   width: 38px;
   height: 38px;
+  padding: 0;
   border: 1px solid var(--color-border-soft);
   border-radius: 50%;
   color: var(--color-gold);
@@ -420,10 +423,34 @@ span {
     rgba(255, 255, 255, 0.07);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
   cursor: pointer;
-  font-size: 24px;
   line-height: 1;
 }
 
+.crescent-icon {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff4bf, var(--color-gold) 72%);
+  box-shadow: 0 0 12px rgba(241, 202, 114, 0.54);
+}
+
+.crescent-icon::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #181127;
+  box-shadow: inset 3px 0 8px rgba(255, 255, 255, 0.05);
+}
+
+.arcana-control--prev .crescent-icon {
+  transform: scaleX(-1);
+}
 .arcana-strip {
   min-width: 0;
   display: grid;
@@ -818,3 +845,5 @@ span {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+

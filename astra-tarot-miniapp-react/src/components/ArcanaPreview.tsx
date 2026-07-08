@@ -1,4 +1,4 @@
-import { useRef } from "react";
+﻿import { useRef } from "react";
 import { AssetImage } from "./AssetImage";
 import { arcana } from "../data/arcana";
 
@@ -13,14 +13,14 @@ export function ArcanaPreview() {
   }
 
   return (
-    <section className="arcana-preview" aria-label="Старшие арканы">
+    <section className="arcana-preview" aria-label="РЎС‚Р°СЂС€РёРµ Р°СЂРєР°РЅС‹">
       <div className="section-heading">
-        <p className="eyebrow">Старшие арканы</p>
-        <h2>Символы, с которых начинается диалог</h2>
+        <p className="eyebrow">РЎС‚Р°СЂС€РёРµ Р°СЂРєР°РЅС‹</p>
+        <h2>РЎРёРјРІРѕР»С‹, СЃ РєРѕС‚РѕСЂС‹С… РЅР°С‡РёРЅР°РµС‚СЃСЏ РґРёР°Р»РѕРі</h2>
       </div>
-      <div className="arcana-carousel" aria-label="Навигация по старшим арканам">
-        <button className="arcana-control" type="button" onClick={() => scrollByCard(-1)} aria-label="Листать назад">
-          ‹
+      <div className="arcana-carousel" aria-label="РќР°РІРёРіР°С†РёСЏ РїРѕ СЃС‚Р°СЂС€РёРј Р°СЂРєР°РЅР°Рј">
+        <button className="arcana-control arcana-control--prev" type="button" onClick={() => scrollByCard(-1)} aria-label="Р›РёСЃС‚Р°С‚СЊ РЅР°Р·Р°Рґ">
+          <span className="crescent-icon" aria-hidden="true" />
         </button>
         <div className="arcana-strip" ref={stripRef}>
           {arcana.map((card) => (
@@ -35,8 +35,8 @@ export function ArcanaPreview() {
             </div>
           ))}
         </div>
-        <button className="arcana-control" type="button" onClick={() => scrollByCard(1)} aria-label="Листать вперед">
-          ›
+        <button className="arcana-control arcana-control--next" type="button" onClick={() => scrollByCard(1)} aria-label="Р›РёСЃС‚Р°С‚СЊ РІРїРµСЂРµРґ">
+          <span className="crescent-icon" aria-hidden="true" />
         </button>
       </div>
     </section>

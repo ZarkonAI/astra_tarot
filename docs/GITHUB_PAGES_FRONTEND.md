@@ -38,3 +38,45 @@ https://zarkonai.github.io/astra_tarot/assets/cards/card_moon.webp
 
 In production, Telegram Mini App API calls need an HTTPS backend. A local
 `http://127.0.0.1` backend is only suitable for local browser testing.
+
+## Test Published GitHub Pages With Local Backend
+
+1. Start the backend:
+
+```powershell
+cd Z:\job\02_tarot_bot
+.\.venv\Scripts\Activate.ps1
+python run.py
+```
+
+2. Start a Cloudflare Tunnel:
+
+```powershell
+cloudflared tunnel --url http://localhost:8000
+```
+
+3. Copy the HTTPS tunnel URL, for example:
+
+```text
+https://xxxxx.trycloudflare.com
+```
+
+4. Open the published Mini App with the API query parameter:
+
+```text
+https://zarkonai.github.io/astra_tarot/?api=https://xxxxx.trycloudflare.com
+```
+
+The Mini App stores this URL in `localStorage` as `astra_api_base_url` and calls:
+
+```text
+https://xxxxx.trycloudflare.com/api/readings/create
+```
+
+5. Reset the stored API URL and return to mock mode:
+
+```text
+https://zarkonai.github.io/astra_tarot/?api=clear
+```
+
+Use `?debug=1` to show the small `API: mock/connected/error` indicator while testing.

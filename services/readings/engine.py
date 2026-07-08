@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 
@@ -14,8 +14,8 @@ class DrawnCard:
 
     def to_prompt_text(self) -> str:
         return (
-            f"{self.position}: {self.card.title} - архетип {self.card.archetype}; "
-            f"свет: {self.card.light}; тень: {self.card.shadow}; символ: {self.card.symbol}."
+            f"{self.position}: {self.card.title} - Р°СЂС…РµС‚РёРї {self.card.archetype}; "
+            f"СЃРІРµС‚: {self.card.light}; С‚РµРЅСЊ: {self.card.shadow}; СЃРёРјРІРѕР»: {self.card.symbol}."
         )
 
     def to_public_dict(self, public_base_url: str | None = None) -> dict[str, str | int]:
@@ -25,6 +25,8 @@ class DrawnCard:
             "slug": self.card.slug,
             "title": self.card.title,
             "meaning": self.card.light,
+            "light": self.card.light,
+            "shadow": self.card.shadow,
             "archetype": self.card.archetype,
             "symbol": self.card.symbol,
             "image_path": self.card.image_path,
@@ -37,3 +39,4 @@ class DrawnCard:
 def create_draw(spread: Spread) -> list[DrawnCard]:
     cards = draw_cards(spread.cards_count)
     return [DrawnCard(position=position, card=card) for position, card in zip(spread.positions, cards)]
+

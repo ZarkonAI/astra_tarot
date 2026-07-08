@@ -1,7 +1,11 @@
 import { AssetImage } from "./AssetImage";
 import { StarGuide } from "./StarGuide";
 
-export function RitualLoader() {
+interface RitualLoaderProps {
+  title?: string;
+}
+
+export function RitualLoader({ title = "Звезда выбирает карты..." }: RitualLoaderProps) {
   return (
     <div className="ritual-loader">
       <StarGuide size="compact" variant="card" />
@@ -16,7 +20,7 @@ export function RitualLoader() {
           <AssetImage path="assets/background/card_back_ornate.webp" alt="" />
         </span>
       </div>
-      <h1>Звезда-проводник выбирает карты...</h1>
+      <h1>{title}</h1>
       <p>Несколько мгновений, и символы сложатся в мягкий ответ.</p>
     </div>
   );

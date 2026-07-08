@@ -160,6 +160,12 @@ class Database:
         await self.connection.commit()
         return int(cursor.lastrowid)
 
+    async def update_reading_response(self, reading_id: int, response_text: str) -> None:
+        await self.connection.execute(
+            "UPDATE readings SET response_text = ? WHERE id = ?",
+            (response_text, reading_id),
+        )
+        await self.connection.commit()
     async def get_stats(self) -> dict[str, int]:
         users_cursor = await self.connection.execute("SELECT COUNT(*) AS count FROM users")
         readings_cursor = await self.connection.execute("SELECT COUNT(*) AS count FROM readings")
@@ -171,3 +177,4 @@ class Database:
             "users": int(users_row["count"] if users_row else 0),
             "readings": int(readings_row["count"] if readings_row else 0),
         }
+
